@@ -35,18 +35,21 @@ object GameEngine {
         return Pair(newState, earned)
     }
 
-    fun buyShip(state: GameState, tierId: String): GameState {
+    fun buyShips(state: GameState, tierId: String, amount: BuyAmount): GameState {
         if (!state.isShipUnlocked(tierId)) return state
-        val cost = state.getShipCost(tierId)
-        if (state.credits < cost) return state
 
         val currentShip = state.ships[tierId] ?: ShipState()
+        val requested = getBuyCount(amount, currentShip.count)
+        val affordable = state.getAffordableCount(tierId, requested)
+        if (affordable == 0) return state
+
+        val totalCost = state.getBulkShipCost(tierId, affordable)
         val updatedShips = state.ships.toMutableMap().apply {
-            this[tierId] = currentShip.copy(count = currentShip.count + 1)
+            this[tierId] = currentShip.copy(count = currentShip.count + affordable)
         }
 
         return state.copy(
-            credits = state.credits - cost,
+            credits = state.credits - totalCost,
             ships = updatedShips
         )
     }
@@ -96,6 +99,28 @@ object GameEngine {
         return state.copy(
             credits = state.credits + earned,
             totalCreditsEarned = state.totalCreditsEarned + earned
+        )
+    }
+
+    fun setBuyAmount(state: GameState, amount: BuyAmount): GameState {
+        return state.copy(buyAmount = amount)
+    }
+
+    fun prestige(state: GameState): GameState {
+        val coinsEarned = calculatePrestigeCoins(state.fleetPower)
+        if (coinsEarned <= 0) return state
+
+        val now = System.currentTimeMillis()
+        return GameState(
+            credits = 25.0,
+            totalCreditsEarned = 0.0,
+            ships = SHIP_TIERS.associate { it.id to ShipState() },
+            shopLevels = SHOP_BONUSES.associate { it.id to 0 },
+            starCoins = state.starCoins + coinsEarned,
+            totalPrestigeResets = state.totalPrestigeResets + 1,
+            buyAmount = state.buyAmount,
+            lastTickTime = now,
+            gameStartTime = now
         )
     }
 }

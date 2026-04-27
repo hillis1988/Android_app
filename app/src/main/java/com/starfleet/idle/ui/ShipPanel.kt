@@ -25,10 +25,13 @@ fun ShipPanel(
     onBuyUpgrade: (String) -> Unit
 ) {
     val isUnlocked = gameState.isShipUnlocked(tier.id)
-    val canAfford = gameState.canAffordShip(tier.id)
     var expanded by remember { mutableStateOf(false) }
     val milestoneMulti = getMilestoneMultiplier(shipState.count)
     val nextMilestone = getNextMilestone(shipState.count)
+
+    val buyCount = getBuyCount(gameState.buyAmount, shipState.count)
+    val bulkCost = gameState.getBulkShipCost(tier.id, buyCount)
+    val canAfford = isUnlocked && gameState.credits >= gameState.getShipCost(tier.id)
 
     Card(
         modifier = Modifier
@@ -66,10 +69,9 @@ fun ShipPanel(
                             color = TextSecondary,
                             fontSize = 11.sp
                         )
-                        // Milestone info
                         if (milestoneMulti > 1.0) {
                             Text(
-                                text = "⚡ ${milestoneMulti.toInt()}x milestone bonus active",
+                                text = "⚡ ${milestoneMulti.toInt()}x milestone bonus",
                                 color = CreditGold,
                                 fontSize = 10.sp
                             )
@@ -91,13 +93,20 @@ fun ShipPanel(
                         colors = ButtonDefaults.buttonColors(
                             containerColor = if (canAfford) NebulaPurple else DeepSpace
                         ),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
                         shape = RoundedCornerShape(8.dp)
                     ) {
-                        Text(
-                            text = "Buy ${formatNumber(gameState.getShipCost(tier.id))}",
-                            fontSize = 12.sp
-                        )
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = if (buyCount > 1) "Buy $buyCount" else "Buy",
+                                fontSize = 11.sp
+                            )
+                            Text(
+                                text = formatNumber(bulkCost),
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
             }

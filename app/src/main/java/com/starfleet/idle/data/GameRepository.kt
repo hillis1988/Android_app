@@ -15,6 +15,8 @@ class GameRepository(context: Context) {
             put("totalCreditsEarned", state.totalCreditsEarned)
             put("lastTickTime", state.lastTickTime)
             put("gameStartTime", state.gameStartTime)
+            put("starCoins", state.starCoins)
+            put("totalPrestigeResets", state.totalPrestigeResets)
 
             val shipsJson = JSONObject()
             state.ships.forEach { (tierId, shipState) ->
@@ -75,6 +77,8 @@ class GameRepository(context: Context) {
                 totalCreditsEarned = json.getDouble("totalCreditsEarned"),
                 ships = ships,
                 shopLevels = shopLevels,
+                starCoins = json.optInt("starCoins", 0),
+                totalPrestigeResets = json.optInt("totalPrestigeResets", 0),
                 lastTickTime = json.getLong("lastTickTime"),
                 gameStartTime = json.getLong("gameStartTime")
             )

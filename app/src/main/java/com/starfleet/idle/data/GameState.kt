@@ -6,47 +6,56 @@ data class ShipState(
 )
 
 data class GameState(
-    val credits: Double = 50.0,
+    val credits: Double = 25.0,
     val totalCreditsEarned: Double = 0.0,
     val ships: Map<String, ShipState> = SHIP_TIERS.associate { it.id to ShipState() },
     val shopLevels: Map<String, Int> = SHOP_BONUSES.associate { it.id to 0 },
+    val starCoins: Int = 0,
+    val totalPrestigeResets: Int = 0,
+    val buyAmount: BuyAmount = BuyAmount.X1,
     val lastTickTime: Long = System.currentTimeMillis(),
     val gameStartTime: Long = System.currentTimeMillis()
 ) {
+    // --- Prestige ---
+    val prestigeMultiplier: Double
+        get() = getPrestigeMultiplier(starCoins)
+
+    val coinsOnReset: Int
+        get() = calculatePrestigeCoins(fleetPower)
+
     // --- Shop bonus helpers ---
     val globalIncomeMultiplier: Double
         get() {
             val level = shopLevels["warp_drive"] ?: 0
-            return 1.0 + (level * 0.25)
+            return 1.0 + (level * 0.20)
         }
 
     val fleetPowerMultiplier: Double
         get() {
             val level = shopLevels["shield_array"] ?: 0
-            return 1.0 + (level * 0.20)
+            return 1.0 + (level * 0.15)
         }
 
     val costReductionFactor: Double
         get() {
             val level = shopLevels["trade_routes"] ?: 0
-            return Math.pow(0.95, level.toDouble()) // 5% cheaper per level, compounds
+            return Math.pow(0.97, level.toDouble())
         }
 
     val offlineEfficiency: Double
         get() {
             val level = shopLevels["auto_pilot"] ?: 0
-            return 0.5 + (level * 0.10) // base 50% + 10% per level
+            return 0.4 + (level * 0.08)
         }
 
     val tapCredits: Double
         get() {
             val level = shopLevels["command_bridge"] ?: 0
             if (level == 0) return 0.0
-            // Tap gives 1 second worth of income * level, minimum 1 credit
-            return maxOf(1.0, creditsPerSecond * 0.5 * level)
+            return maxOf(1.0, creditsPerSecond * 0.3 * level)
         }
 
-    // --- Fleet power with milestone + shop multiplier ---
+    // --- Fleet power (no prestige multiplier — prestige only boosts income) ---
     val fleetPower: Double
         get() = SHIP_TIERS.sumOf { tier ->
             val state = ships[tier.id] ?: ShipState()
@@ -54,7 +63,7 @@ data class GameState(
             state.count * tier.basePower * milestoneMulti
         } * fleetPowerMultiplier
 
-    // --- Income with milestone + upgrade + shop multipliers ---
+    // --- Income with milestone + upgrade + shop + prestige multipliers ---
     val creditsPerSecond: Double
         get() {
             val rawIncome = SHIP_TIERS.sumOf { tier ->
@@ -68,13 +77,32 @@ data class GameState(
                 }
                 baseIncome * (1.0 + upgradeMultiplier)
             }
-            return rawIncome * globalIncomeMultiplier
+            return rawIncome * globalIncomeMultiplier * prestigeMultiplier
         }
 
-    fun getShipCost(tierId: String): Double {
+    fun getShipCostAt(tierId: String, index: Int): Double {
         val tier = SHIP_TIERS.first { it.id == tierId }
         val state = ships[tierId] ?: ShipState()
-        return tier.baseCost * Math.pow(tier.costMultiplier, state.count.toDouble()) * costReductionFactor
+        return tier.baseCost * Math.pow(tier.costMultiplier, (state.count + index).toDouble()) * costReductionFactor
+    }
+
+    fun getShipCost(tierId: String): Double = getShipCostAt(tierId, 0)
+
+    fun getBulkShipCost(tierId: String, count: Int): Double {
+        var total = 0.0
+        for (i in 0 until count) {
+            total += getShipCostAt(tierId, i)
+        }
+        return total
+    }
+
+    fun getAffordableCount(tierId: String, requested: Int): Int {
+        var total = 0.0
+        for (i in 0 until requested) {
+            total += getShipCostAt(tierId, i)
+            if (total > credits) return i
+        }
+        return requested
     }
 
     fun getUpgradeCost(tierId: String, upgradeId: String): Double {
@@ -115,7 +143,7 @@ data class GameState(
 
     val isGameComplete: Boolean
         get() {
-            val dreadnoughts = ships["dreadnought"]?.count ?: 0
-            return dreadnoughts >= 10 && fleetPower >= 200_000
+            val dysonCount = ships["dyson"]?.count ?: 0
+            return dysonCount >= 5 && fleetPower >= 10_000_000_000.0
         }
 }

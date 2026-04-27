@@ -3,6 +3,7 @@ package com.starfleet.idle.ui
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.starfleet.idle.data.BuyAmount
 import com.starfleet.idle.data.GameRepository
 import com.starfleet.idle.data.GameState
 import com.starfleet.idle.engine.GameEngine
@@ -54,7 +55,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun buyShip(tierId: String) {
-        _state.value = GameEngine.buyShip(_state.value, tierId)
+        _state.value = GameEngine.buyShips(_state.value, tierId, _state.value.buyAmount)
     }
 
     fun buyUpgrade(tierId: String, upgradeId: String) {
@@ -65,17 +66,26 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         _state.value = GameEngine.buyShopBonus(_state.value, bonusId)
     }
 
+    fun setBuyAmount(amount: BuyAmount) {
+        _state.value = GameEngine.setBuyAmount(_state.value, amount)
+    }
+
     fun tap() {
         _state.value = GameEngine.tap(_state.value)
     }
 
-    fun dismissOfflineEarnings() {
-        _offlineEarnings.value = null
+    fun prestige() {
+        _state.value = GameEngine.prestige(_state.value)
+        repository.save(_state.value)
     }
 
-    fun resetGame() {
+    fun hardReset() {
         repository.clear()
         _state.value = GameState()
+    }
+
+    fun dismissOfflineEarnings() {
+        _offlineEarnings.value = null
     }
 
     fun saveGame() {

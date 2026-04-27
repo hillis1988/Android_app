@@ -8,70 +8,130 @@ data class ShipTier(
     val baseCost: Double,
     val baseIncome: Double,       // credits per second per ship
     val basePower: Double,        // fleet power per ship
-    val costMultiplier: Double = 1.15,
+    val costMultiplier: Double = 1.18,
     val unlockPower: Double = 0.0 // fleet power needed to unlock
 )
 
 val SHIP_TIERS = listOf(
     ShipTier(
-        id = "scout",
+        id = "probe",
+        name = "Recon Probe",
+        emoji = "📡",
+        description = "Automated deep-space scanner.",
+        baseCost = 15.0,
+        baseIncome = 0.2,
+        basePower = 1.0,
+        unlockPower = 0.0
+    ),
+    ShipTier(
+        id = "shuttle",
         name = "Scout Shuttle",
         emoji = "🛸",
         description = "Light recon vessel. Cheap and reliable.",
-        baseCost = 10.0,
-        baseIncome = 0.5,
-        basePower = 1.0,
-        unlockPower = 0.0
+        baseCost = 200.0,
+        baseIncome = 1.5,
+        basePower = 4.0,
+        unlockPower = 8.0
+    ),
+    ShipTier(
+        id = "corvette",
+        name = "Patrol Corvette",
+        emoji = "⚡",
+        description = "Fast attack craft for border patrols.",
+        baseCost = 3_000.0,
+        baseIncome = 12.0,
+        basePower = 18.0,
+        unlockPower = 50.0
     ),
     ShipTier(
         id = "frigate",
         name = "Cargo Frigate",
         emoji = "🚀",
         description = "Hauler with decent cargo capacity.",
-        baseCost = 120.0,
-        baseIncome = 4.0,
-        basePower = 5.0,
-        unlockPower = 10.0
+        baseCost = 45_000.0,
+        baseIncome = 80.0,
+        basePower = 80.0,
+        unlockPower = 300.0
     ),
     ShipTier(
         id = "cruiser",
         name = "Mining Cruiser",
         emoji = "⛏️",
         description = "Mid-range vessel built for asteroid mining.",
-        baseCost = 1_400.0,
-        baseIncome = 30.0,
-        basePower = 25.0,
-        unlockPower = 100.0
+        baseCost = 700_000.0,
+        baseIncome = 500.0,
+        basePower = 350.0,
+        unlockPower = 2_000.0
     ),
     ShipTier(
         id = "destroyer",
         name = "Battle Destroyer",
         emoji = "💥",
         description = "Heavy warship. Earns bounties from patrols.",
-        baseCost = 20_000.0,
-        baseIncome = 200.0,
-        basePower = 150.0,
-        unlockPower = 800.0
+        baseCost = 12_000_000.0,
+        baseIncome = 3_500.0,
+        basePower = 1_800.0,
+        unlockPower = 15_000.0
     ),
     ShipTier(
-        id = "flagship",
+        id = "battlecruiser",
+        name = "Battlecruiser",
+        emoji = "🔱",
+        description = "Versatile capital ship with heavy armament.",
+        baseCost = 250_000_000.0,
+        baseIncome = 28_000.0,
+        basePower = 10_000.0,
+        unlockPower = 100_000.0
+    ),
+    ShipTier(
+        id = "carrier",
         name = "Carrier Flagship",
         emoji = "🛡️",
-        description = "Command vessel. Boosts entire fleet operations.",
-        baseCost = 500_000.0,
-        baseIncome = 1_800.0,
-        basePower = 1_000.0,
-        unlockPower = 5_000.0
+        description = "Command vessel. Deploys fighter wings.",
+        baseCost = 5_000_000_000.0,
+        baseIncome = 200_000.0,
+        basePower = 55_000.0,
+        unlockPower = 750_000.0
+    ),
+    ShipTier(
+        id = "titan",
+        name = "Titan Warship",
+        emoji = "🏛️",
+        description = "Massive siege platform. Cracks planets.",
+        baseCost = 120_000_000_000.0,
+        baseIncome = 1_500_000.0,
+        basePower = 300_000.0,
+        unlockPower = 5_000_000.0
     ),
     ShipTier(
         id = "dreadnought",
         name = "Dreadnought",
         emoji = "👑",
         description = "Ultimate capital ship. Galaxy-class power.",
-        baseCost = 20_000_000.0,
-        baseIncome = 20_000.0,
-        basePower = 10_000.0,
-        unlockPower = 50_000.0
+        baseCost = 3_000_000_000_000.0,
+        baseIncome = 12_000_000.0,
+        basePower = 2_000_000.0,
+        unlockPower = 40_000_000.0
+    ),
+    ShipTier(
+        id = "leviathan",
+        name = "Leviathan",
+        emoji = "🐉",
+        description = "Ancient bio-mechanical warform. Devours stars.",
+        baseCost = 100_000_000_000_000.0,
+        baseIncome = 120_000_000.0,
+        basePower = 15_000_000.0,
+        unlockPower = 500_000_000.0
+    ),
+    ShipTier(
+        id = "dyson",
+        name = "Dyson Sphere",
+        emoji = "☀️",
+        description = "Harnesses an entire star. The endgame.",
+        baseCost = 5_000_000_000_000_000.0,
+        baseIncome = 1_500_000_000.0,
+        basePower = 150_000_000.0,
+        unlockPower = 5_000_000_000.0
     )
 )
 
@@ -80,8 +140,8 @@ data class UpgradeType(
     val name: String,
     val emoji: String,
     val description: String,
-    val baseCostMultiplier: Double, // multiplied by ship base cost
-    val incomeBoost: Double,        // percentage boost per level (0.1 = 10%)
+    val baseCostMultiplier: Double,
+    val incomeBoost: Double,
     val costScaling: Double = 1.4
 )
 
@@ -91,24 +151,23 @@ val UPGRADE_TYPES = listOf(
         name = "Engine",
         emoji = "🔥",
         description = "Faster operations, more income",
-        baseCostMultiplier = 2.0,
-        incomeBoost = 0.15,
-        costScaling = 1.4
+        baseCostMultiplier = 5.0,
+        incomeBoost = 0.10,
+        costScaling = 1.5
     ),
     UpgradeType(
         id = "hull",
         name = "Hull",
         emoji = "🛡️",
         description = "Tougher hull, income multiplier",
-        baseCostMultiplier = 3.0,
-        incomeBoost = 0.25,
-        costScaling = 1.6
+        baseCostMultiplier = 8.0,
+        incomeBoost = 0.18,
+        costScaling = 1.7
     )
 )
 
 // --- Milestone thresholds: each doubles output ---
 val MILESTONE_THRESHOLDS = listOf(10, 25, 50)
-// After 50, every multiple of 100 also doubles (100, 200, 300...)
 
 fun getMilestoneMultiplier(count: Int): Double {
     var doublings = 0
@@ -125,9 +184,40 @@ fun getNextMilestone(count: Int): Int? {
     for (threshold in MILESTONE_THRESHOLDS) {
         if (count < threshold) return threshold
     }
-    // Next multiple of 100
     val next = ((count / 100) + 1) * 100
     return next
+}
+
+// --- Buy amount options ---
+enum class BuyAmount(val label: String) {
+    X1("x1"),
+    X5("x5"),
+    X10("x10"),
+    X25("x25"),
+    NEXT("Next")
+}
+
+fun getBuyCount(amount: BuyAmount, currentCount: Int): Int {
+    return when (amount) {
+        BuyAmount.X1 -> 1
+        BuyAmount.X5 -> 5
+        BuyAmount.X10 -> 10
+        BuyAmount.X25 -> 25
+        BuyAmount.NEXT -> {
+            val next = getNextMilestone(currentCount) ?: (currentCount + 1)
+            maxOf(1, next - currentCount)
+        }
+    }
+}
+
+// --- Prestige (Star Coins) ---
+fun calculatePrestigeCoins(fleetPower: Double): Int {
+    if (fleetPower < 1_000) return 0
+    return Math.floor(Math.sqrt(fleetPower / 1_000.0)).toInt()
+}
+
+fun getPrestigeMultiplier(starCoins: Int): Double {
+    return 1.0 + (starCoins * 0.05) // each coin = +5% income
 }
 
 // --- Shop Bonuses ---
@@ -143,11 +233,11 @@ data class ShopBonus(
 )
 
 enum class BonusType {
-    GLOBAL_INCOME_MULT,    // multiplies all income
-    FLEET_POWER_MULT,      // multiplies fleet power
-    COST_REDUCTION,        // reduces ship purchase costs
-    OFFLINE_BOOST,         // increases offline earning rate
-    CLICK_BONUS            // credits per manual tap
+    GLOBAL_INCOME_MULT,
+    FLEET_POWER_MULT,
+    COST_REDUCTION,
+    OFFLINE_BOOST,
+    CLICK_BONUS
 }
 
 val SHOP_BONUSES = listOf(
@@ -155,9 +245,9 @@ val SHOP_BONUSES = listOf(
         id = "warp_drive",
         name = "Warp Drive Tech",
         emoji = "🌀",
-        description = "All ships earn 25% more per level",
-        baseCost = 500.0,
-        costScaling = 2.5,
+        description = "All ships earn 20% more per level",
+        baseCost = 5_000.0,
+        costScaling = 3.5,
         maxLevel = 10,
         type = BonusType.GLOBAL_INCOME_MULT
     ),
@@ -165,9 +255,9 @@ val SHOP_BONUSES = listOf(
         id = "shield_array",
         name = "Shield Array",
         emoji = "🔰",
-        description = "Fleet Power boosted by 20% per level",
-        baseCost = 800.0,
-        costScaling = 2.8,
+        description = "Fleet Power boosted by 15% per level",
+        baseCost = 8_000.0,
+        costScaling = 3.8,
         maxLevel = 10,
         type = BonusType.FLEET_POWER_MULT
     ),
@@ -175,9 +265,9 @@ val SHOP_BONUSES = listOf(
         id = "trade_routes",
         name = "Trade Routes",
         emoji = "🗺️",
-        description = "Ship costs reduced by 5% per level",
-        baseCost = 1_000.0,
-        costScaling = 3.0,
+        description = "Ship costs reduced by 3% per level",
+        baseCost = 15_000.0,
+        costScaling = 4.0,
         maxLevel = 10,
         type = BonusType.COST_REDUCTION
     ),
@@ -185,9 +275,9 @@ val SHOP_BONUSES = listOf(
         id = "auto_pilot",
         name = "Auto-Pilot AI",
         emoji = "🤖",
-        description = "Offline earnings +10% efficiency per level",
-        baseCost = 2_000.0,
-        costScaling = 2.2,
+        description = "Offline earnings +8% efficiency per level",
+        baseCost = 20_000.0,
+        costScaling = 3.0,
         maxLevel = 10,
         type = BonusType.OFFLINE_BOOST
     ),
@@ -196,8 +286,8 @@ val SHOP_BONUSES = listOf(
         name = "Command Bridge",
         emoji = "🎯",
         description = "Tap to earn credits (more per level)",
-        baseCost = 300.0,
-        costScaling = 2.0,
+        baseCost = 2_000.0,
+        costScaling = 2.8,
         maxLevel = 15,
         type = BonusType.CLICK_BONUS
     )

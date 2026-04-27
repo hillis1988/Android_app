@@ -3,7 +3,6 @@ package com.starfleet.idle.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -20,7 +19,7 @@ fun StatsBar(state: GameState) {
         modifier = Modifier
             .fillMaxWidth()
             .background(DeepSpace)
-            .padding(16.dp)
+            .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
         Text(
             text = "⭐ STARFLEET COMMAND",
@@ -30,7 +29,7 @@ fun StatsBar(state: GameState) {
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -39,6 +38,44 @@ fun StatsBar(state: GameState) {
             StatChip(label = "Credits", value = formatNumber(state.credits), color = CreditGold)
             StatChip(label = "Per Sec", value = formatNumber(state.creditsPerSecond), color = ShieldGreen)
             StatChip(label = "Fleet Power", value = formatNumber(state.fleetPower), color = StarBlue)
+        }
+
+        if (state.starCoins > 0) {
+            Spacer(modifier = Modifier.height(6.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "🪙 ${state.starCoins} Star Coins",
+                    color = CreditGold,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "  ·  ",
+                    color = TextSecondary,
+                    fontSize = 12.sp
+                )
+                Text(
+                    text = "%.1fx income".format(state.prestigeMultiplier),
+                    color = ShieldGreen,
+                    fontSize = 12.sp
+                )
+                if (state.totalPrestigeResets > 0) {
+                    Text(
+                        text = "  ·  ",
+                        color = TextSecondary,
+                        fontSize = 12.sp
+                    )
+                    Text(
+                        text = "Reset #${state.totalPrestigeResets}",
+                        color = TextSecondary,
+                        fontSize = 12.sp
+                    )
+                }
+            }
         }
 
         if (state.isGameComplete) {
@@ -69,10 +106,12 @@ private fun StatChip(label: String, value: String, color: androidx.compose.ui.gr
 
 fun formatNumber(value: Double): String {
     return when {
-        value >= 1_000_000_000_000 -> String.format("%.2fT", value / 1_000_000_000_000)
-        value >= 1_000_000_000 -> String.format("%.2fB", value / 1_000_000_000)
-        value >= 1_000_000 -> String.format("%.2fM", value / 1_000_000)
-        value >= 1_000 -> String.format("%.2fK", value / 1_000)
+        value >= 1e18 -> String.format("%.2fQi", value / 1e18)
+        value >= 1e15 -> String.format("%.2fQa", value / 1e15)
+        value >= 1e12 -> String.format("%.2fT", value / 1e12)
+        value >= 1e9 -> String.format("%.2fB", value / 1e9)
+        value >= 1e6 -> String.format("%.2fM", value / 1e6)
+        value >= 1e3 -> String.format("%.2fK", value / 1e3)
         value >= 1 -> String.format("%.1f", value)
         else -> String.format("%.2f", value)
     }
