@@ -51,61 +51,32 @@ fun ShipPanel(
                 Text(text = tier.emoji, fontSize = 28.sp)
                 Spacer(modifier = Modifier.width(10.dp))
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = tier.name,
-                        color = TextPrimary,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp
-                    )
+                    Text(text = tier.name, color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                     if (!isUnlocked) {
-                        Text(
-                            text = "Requires ${formatNumber(tier.unlockPower)} Fleet Power",
-                            color = AlertRed,
-                            fontSize = 11.sp
-                        )
+                        Text(text = "Requires ${formatNumber(tier.unlockPower)} Fleet Power", color = AlertRed, fontSize = 11.sp)
                     } else {
                         Text(
                             text = "Owned: ${shipState.count} · Income: ${formatNumber(getShipIncome(tier, shipState, gameState))}/s",
-                            color = TextSecondary,
-                            fontSize = 11.sp
+                            color = TextSecondary, fontSize = 11.sp
                         )
                         if (milestoneMulti > 1.0) {
-                            Text(
-                                text = "⚡ ${milestoneMulti.toInt()}x milestone bonus",
-                                color = CreditGold,
-                                fontSize = 10.sp
-                            )
+                            Text(text = "⚡ ${milestoneMulti.toInt()}x milestone bonus", color = CreditGold, fontSize = 10.sp)
                         }
                         if (nextMilestone != null) {
-                            Text(
-                                text = "Next 2x at $nextMilestone ships",
-                                color = TextSecondary,
-                                fontSize = 10.sp
-                            )
+                            Text(text = "Next 2x at $nextMilestone ships", color = TextSecondary, fontSize = 10.sp)
                         }
                     }
                 }
-
                 if (isUnlocked) {
                     Button(
-                        onClick = onBuyShip,
-                        enabled = canAfford,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (canAfford) NebulaPurple else DeepSpace
-                        ),
+                        onClick = onBuyShip, enabled = canAfford,
+                        colors = ButtonDefaults.buttonColors(containerColor = if (canAfford) NebulaPurple else DeepSpace),
                         contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(
-                                text = if (buyCount > 1) "Buy $buyCount" else "Buy",
-                                fontSize = 11.sp
-                            )
-                            Text(
-                                text = formatNumber(bulkCost),
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold
-                            )
+                            Text(text = if (buyCount > 1) "Buy $buyCount" else "Buy", fontSize = 11.sp)
+                            Text(text = formatNumber(bulkCost), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -115,43 +86,26 @@ fun ShipPanel(
                 Column(modifier = Modifier.padding(top = 8.dp)) {
                     Divider(color = DeepSpace, thickness = 1.dp)
                     Spacer(modifier = Modifier.height(8.dp))
-
                     UPGRADE_TYPES.forEach { upgrade ->
                         val level = shipState.upgradeLevels[upgrade.id] ?: 0
                         val cost = gameState.getUpgradeCost(tier.id, upgrade.id)
                         val canAffordUpgrade = gameState.credits >= cost
-
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp),
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(text = upgrade.emoji, fontSize = 18.sp)
                             Spacer(modifier = Modifier.width(8.dp))
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = "${upgrade.name} Lv.$level",
-                                    color = TextPrimary,
-                                    fontSize = 13.sp
-                                )
-                                Text(
-                                    text = "+${(upgrade.incomeBoost * 100).toInt()}% income per level",
-                                    color = TextSecondary,
-                                    fontSize = 10.sp
-                                )
+                                Text(text = "${upgrade.name} Lv.$level", color = TextPrimary, fontSize = 13.sp)
+                                Text(text = "+${(upgrade.incomeBoost * 100).toInt()}% income per level", color = TextSecondary, fontSize = 10.sp)
                             }
                             Button(
-                                onClick = { onBuyUpgrade(upgrade.id) },
-                                enabled = canAffordUpgrade,
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (canAffordUpgrade) StarBlue else DeepSpace
-                                ),
+                                onClick = { onBuyUpgrade(upgrade.id) }, enabled = canAffordUpgrade,
+                                colors = ButtonDefaults.buttonColors(containerColor = if (canAffordUpgrade) StarBlue else DeepSpace),
                                 contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp),
                                 shape = RoundedCornerShape(6.dp)
-                            ) {
-                                Text(text = formatNumber(cost), fontSize = 11.sp)
-                            }
+                            ) { Text(text = formatNumber(cost), fontSize = 11.sp) }
                         }
                     }
                 }
@@ -163,10 +117,12 @@ fun ShipPanel(
 private fun getShipIncome(tier: ShipTier, state: ShipState, gameState: GameState): Double {
     if (state.count == 0) return 0.0
     val milestoneMulti = getMilestoneMultiplier(state.count)
-    val baseIncome = tier.baseIncome * state.count * milestoneMulti
+    val baseIncome = tier.baseIncome * state.count * milestoneMulti * gameState.activeSector.incomeMultiplier
     val upgradeMultiplier = UPGRADE_TYPES.sumOf { upgrade ->
         val level = state.upgradeLevels[upgrade.id] ?: 0
         level * upgrade.incomeBoost
     }
-    return baseIncome * (1.0 + upgradeMultiplier) * gameState.globalIncomeMultiplier
+    return baseIncome * (1.0 + upgradeMultiplier) * gameState.globalIncomeMultiplier *
+        gameState.prestigeMultiplier * gameState.researchIncomeMultiplier *
+        gameState.adBoostMultiplier * (1.0 + gameState.gemBonusIncome)
 }

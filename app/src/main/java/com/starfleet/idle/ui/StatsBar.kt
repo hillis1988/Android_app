@@ -16,77 +16,43 @@ import com.starfleet.idle.ui.theme.*
 @Composable
 fun StatsBar(state: GameState) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(DeepSpace)
-            .padding(horizontal = 16.dp, vertical = 12.dp)
+        modifier = Modifier.fillMaxWidth().background(DeepSpace).padding(horizontal = 16.dp, vertical = 10.dp)
     ) {
-        Text(
-            text = "⭐ STARFLEET COMMAND",
-            color = CreditGold,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.align(Alignment.CenterHorizontally)
-        )
+        Text("⭐ STARFLEET COMMAND", color = CreditGold, fontSize = 18.sp, fontWeight = FontWeight.Bold,
+            modifier = Modifier.align(Alignment.CenterHorizontally))
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(Modifier.height(8.dp))
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            StatChip(label = "Credits", value = formatNumber(state.credits), color = CreditGold)
-            StatChip(label = "Per Sec", value = formatNumber(state.creditsPerSecond), color = ShieldGreen)
-            StatChip(label = "Fleet Power", value = formatNumber(state.fleetPower), color = StarBlue)
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+            StatChip("Credits", formatNumber(state.credits), CreditGold)
+            StatChip("Per Sec", formatNumber(state.creditsPerSecond), ShieldGreen)
+            StatChip("Fleet Power", formatNumber(state.totalFleetPower), StarBlue)
         }
 
-        if (state.starCoins > 0) {
-            Spacer(modifier = Modifier.height(6.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "🪙 ${state.starCoins} Star Coins",
-                    color = CreditGold,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "  ·  ",
-                    color = TextSecondary,
-                    fontSize = 12.sp
-                )
-                Text(
-                    text = "%.1fx income".format(state.prestigeMultiplier),
-                    color = ShieldGreen,
-                    fontSize = 12.sp
-                )
-                if (state.totalPrestigeResets > 0) {
-                    Text(
-                        text = "  ·  ",
-                        color = TextSecondary,
-                        fontSize = 12.sp
-                    )
-                    Text(
-                        text = "Reset #${state.totalPrestigeResets}",
-                        color = TextSecondary,
-                        fontSize = 12.sp
-                    )
-                }
+        Spacer(Modifier.height(4.dp))
+
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+            if (state.starCoins > 0) {
+                Text("🪙 ${state.starCoins}", color = CreditGold, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                Text(" · ", color = TextSecondary, fontSize = 11.sp)
+            }
+            Text("💎 ${state.gems}", color = NebulaPurple, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            Text(" · ", color = TextSecondary, fontSize = 11.sp)
+            Text("🧪 ${state.researchPoints} RP", color = StarBlue, fontSize = 11.sp)
+            if (state.isAdBoostActive) {
+                Text(" · ", color = TextSecondary, fontSize = 11.sp)
+                Text("⚡2x", color = ShieldGreen, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            }
+            if (state.isSpeedBoostActive) {
+                Text(" · ", color = TextSecondary, fontSize = 11.sp)
+                Text("⏩2x", color = StarBlue, fontSize = 11.sp, fontWeight = FontWeight.Bold)
             }
         }
 
         if (state.isGameComplete) {
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "🎉 GALAXY CONQUERED! YOU WIN! 🎉",
-                color = CreditGold,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            )
+            Spacer(Modifier.height(6.dp))
+            Text("🎉 GALAXY CONQUERED! YOU WIN! 🎉", color = CreditGold, fontSize = 16.sp, fontWeight = FontWeight.Bold,
+                modifier = Modifier.align(Alignment.CenterHorizontally))
         }
     }
 }
@@ -95,17 +61,20 @@ fun StatsBar(state: GameState) {
 private fun StatChip(label: String, value: String, color: androidx.compose.ui.graphics.Color) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .background(CardBackground, RoundedCornerShape(8.dp))
-            .padding(horizontal = 12.dp, vertical = 8.dp)
+        modifier = Modifier.background(CardBackground, RoundedCornerShape(8.dp)).padding(horizontal = 10.dp, vertical = 6.dp)
     ) {
-        Text(text = value, color = color, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-        Text(text = label, color = TextSecondary, fontSize = 11.sp)
+        Text(text = value, color = color, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+        Text(text = label, color = TextSecondary, fontSize = 10.sp)
     }
 }
 
 fun formatNumber(value: Double): String {
     return when {
+        value >= 1e33 -> String.format("%.2fDc", value / 1e33)
+        value >= 1e30 -> String.format("%.2fNo", value / 1e30)
+        value >= 1e27 -> String.format("%.2fOc", value / 1e27)
+        value >= 1e24 -> String.format("%.2fSp", value / 1e24)
+        value >= 1e21 -> String.format("%.2fSx", value / 1e21)
         value >= 1e18 -> String.format("%.2fQi", value / 1e18)
         value >= 1e15 -> String.format("%.2fQa", value / 1e15)
         value >= 1e12 -> String.format("%.2fT", value / 1e12)

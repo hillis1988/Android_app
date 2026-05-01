@@ -292,3 +292,97 @@ val SHOP_BONUSES = listOf(
         type = BonusType.CLICK_BONUS
     )
 )
+
+// --- Daily Login Rewards ---
+data class DailyReward(
+    val day: Int,
+    val emoji: String,
+    val description: String,
+    val credits: Double = 0.0,
+    val gems: Int = 0,
+    val researchPoints: Int = 0
+)
+
+val DAILY_REWARDS = listOf(
+    DailyReward(1, "💰", "500 Credits", credits = 500.0),
+    DailyReward(2, "💰", "2K Credits", credits = 2_000.0),
+    DailyReward(3, "💎", "5 Gems", gems = 5),
+    DailyReward(4, "💰", "10K Credits", credits = 10_000.0),
+    DailyReward(5, "🔬", "3 Research Points", researchPoints = 3),
+    DailyReward(6, "💎", "15 Gems", gems = 15),
+    DailyReward(7, "💎", "50 Gems + 50K Credits", gems = 50, credits = 50_000.0)
+)
+
+// --- Gem Store Items ---
+data class GemStoreItem(
+    val id: String,
+    val name: String,
+    val emoji: String,
+    val description: String,
+    val gemCost: Int,
+    val type: GemItemType
+)
+
+enum class GemItemType {
+    TIME_WARP_1H,
+    TIME_WARP_4H,
+    TIME_WARP_8H,
+    PERMANENT_INCOME_5,
+    PERMANENT_INCOME_15,
+    RESEARCH_POINTS_5,
+    RESEARCH_POINTS_20
+}
+
+val GEM_STORE_ITEMS = listOf(
+    GemStoreItem("warp_1h", "Time Warp 1H", "⏩", "Collect 1 hour of income instantly", 10, GemItemType.TIME_WARP_1H),
+    GemStoreItem("warp_4h", "Time Warp 4H", "⏭️", "Collect 4 hours of income instantly", 35, GemItemType.TIME_WARP_4H),
+    GemStoreItem("warp_8h", "Time Warp 8H", "🚀", "Collect 8 hours of income instantly", 60, GemItemType.TIME_WARP_8H),
+    GemStoreItem("perm_income_5", "Income Boost +5%", "📈", "Permanent +5% income (stacks)", 50, GemItemType.PERMANENT_INCOME_5),
+    GemStoreItem("perm_income_15", "Income Boost +15%", "📊", "Permanent +15% income (stacks)", 120, GemItemType.PERMANENT_INCOME_15),
+    GemStoreItem("rp_5", "Research Pack (5)", "🔬", "Gain 5 Research Points", 25, GemItemType.RESEARCH_POINTS_5),
+    GemStoreItem("rp_20", "Research Pack (20)", "🧪", "Gain 20 Research Points", 80, GemItemType.RESEARCH_POINTS_20)
+)
+
+// --- Gem IAP Packs (In-App Purchase) ---
+data class GemPack(
+    val id: String,
+    val name: String,
+    val emoji: String,
+    val gems: Int,
+    val bonusGems: Int = 0,
+    val priceDisplay: String,   // shown to user
+    val priceValue: Double,     // actual price in USD (0.0 = free in dev)
+    val isBestValue: Boolean = false
+)
+
+val GEM_PACKS = listOf(
+    GemPack(
+        id = "pack_tiny", name = "Handful of Gems", emoji = "💎",
+        gems = 50, bonusGems = 0,
+        priceDisplay = "£0.99", priceValue = 0.99
+    ),
+    GemPack(
+        id = "pack_small", name = "Pouch of Gems", emoji = "💎",
+        gems = 150, bonusGems = 15,
+        priceDisplay = "£1.99", priceValue = 1.99
+    ),
+    GemPack(
+        id = "pack_medium", name = "Chest of Gems", emoji = "💎💎",
+        gems = 500, bonusGems = 75,
+        priceDisplay = "£4.99", priceValue = 4.99,
+        isBestValue = true
+    ),
+    GemPack(
+        id = "pack_large", name = "Vault of Gems", emoji = "💎💎💎",
+        gems = 1200, bonusGems = 250,
+        priceDisplay = "£9.99", priceValue = 9.99
+    ),
+    GemPack(
+        id = "pack_mega", name = "Galaxy Hoard", emoji = "🌟💎🌟",
+        gems = 3000, bonusGems = 800,
+        priceDisplay = "£19.99", priceValue = 19.99
+    )
+)
+
+// Set to true for development (all packs are free), false for production
+const val DEV_MODE_FREE_GEMS = true
