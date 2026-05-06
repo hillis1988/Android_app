@@ -350,7 +350,15 @@ private fun SectorSelector(state: GameState, onSwitch: (String) -> Unit) {
             val active = sector.id == state.activeSectorId
             FilterChip(
                 selected = active, onClick = { if (unlocked) onSwitch(sector.id) }, enabled = unlocked,
-                label = { Text(text = "${sector.emoji} ${sector.name}", fontSize = 10.sp, maxLines = 1) },
+                label = {
+                    val labelText = if (unlocked) {
+                        "${sector.emoji} ${sector.name}"
+                    } else {
+                        val reqShip = SHIP_TIERS.find { it.id == sector.unlockShipId }
+                        "🔒 ${sector.unlockShipCount}x ${reqShip?.name ?: "???"}"
+                    }
+                    Text(text = labelText, fontSize = 10.sp, maxLines = 1)
+                },
                 colors = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = NebulaPurple, selectedLabelColor = TextPrimary,
                     containerColor = CardBackground, labelColor = TextSecondary,
@@ -379,7 +387,8 @@ private fun FleetTab(viewModel: GameViewModel, state: GameState, onPrestige: () 
         }
 
         LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(vertical = 4.dp)) {
-            items(SHIP_TIERS) { tier ->
+            val activeShips = SHIP_TIERS.filter { it.sectorId == state.activeSectorId }
+            items(activeShips) { tier ->
                 val shipState = state.activeShips[tier.id] ?: ShipState()
                 ShipPanel(tier, shipState, state, { viewModel.buyShip(tier.id) }, { uid -> viewModel.buyUpgrade(tier.id, uid) })
             }

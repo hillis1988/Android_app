@@ -53,7 +53,13 @@ fun ShipPanel(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(text = tier.name, color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                     if (!isUnlocked) {
-                        Text(text = "Requires ${formatNumber(tier.unlockPower)} Fleet Power", color = AlertRed, fontSize = 11.sp)
+                        val requirement = if (tier.unlockShipsId != null) {
+                            val requirementShip = SHIP_TIERS.find { it.id == tier.unlockShipsId }
+                            "Requires ${tier.unlockShipsCount} ${requirementShip?.name ?: "units"}"
+                        } else {
+                            "Locked"
+                        }
+                        Text(text = requirement, color = AlertRed, fontSize = 11.sp)
                     } else {
                         Text(
                             text = "Owned: ${shipState.count} · Income: ${formatNumber(getShipIncome(tier, shipState, gameState))}/s",

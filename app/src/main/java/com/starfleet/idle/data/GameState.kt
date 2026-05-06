@@ -92,13 +92,17 @@ data class GameState(
             return total * researchFleetPowerMultiplier
         }
 
-    // --- Sector unlock (safe — totalFleetPower has no unlock check) ---
+    // --- Sector unlock ---
     fun isSectorUnlocked(sectorId: String): Boolean {
         val sector = SECTORS.first { it.id == sectorId }
-        if (sector.unlockFleetPower <= 0.0) return true
-        val wormholeLevel = researchLevels["wormholes"] ?: 0
-        val reduction = 1.0 - (wormholeLevel * 0.05)
-        return totalFleetPower >= sector.unlockFleetPower * reduction
+        val targetShipId = sector.unlockShipId ?: return true
+        
+        // Find which sector contains targetShipId to check its count
+        val targetShip = SHIP_TIERS.find { it.id == targetShipId } ?: return true
+        val targetSectorState = sectors[targetShip.sectorId] ?: SectorState()
+        val count = targetSectorState.ships[targetShipId]?.count ?: 0
+        
+        return count >= sector.unlockShipCount
     }
 
     val unlockedSectorCount: Int
@@ -127,12 +131,6 @@ data class GameState(
             return 1.0 + (level * 0.20)
         }
 
-    val fleetPowerMultiplier: Double
-        get() {
-            val level = activeShopLevels["shield_array"] ?: 0
-            return 1.0 + (level * 0.15)
-        }
-
     val costReductionFactor: Double
         get() {
             val level = activeShopLevels["trade_routes"] ?: 0
@@ -151,18 +149,6 @@ data class GameState(
             val level = activeShopLevels["command_bridge"] ?: 0
             if (level == 0) return 0.0
             return maxOf(1.0, creditsPerSecond * 0.3 * level)
-        }
-
-    // --- Fleet power for active sector only (for ship unlock display) ---
-    val fleetPower: Double
-        get() {
-            val sectorState = activeSectorState
-            val sectorPower = SHIP_TIERS.sumOf { tier ->
-                val state = sectorState.ships[tier.id] ?: ShipState()
-                val milestoneMulti = getMilestoneMultiplier(state.count)
-                state.count * tier.basePower * milestoneMulti
-            }
-            return sectorPower * fleetPowerMultiplier * activeSector.incomeMultiplier * researchFleetPowerMultiplier
         }
 
     // --- Research point gen rate (uses totalFleetPower, safe) ---
@@ -265,9 +251,12 @@ data class GameState(
     }
 
     fun isShipUnlocked(tierId: String): Boolean {
-        if ((perkLevels["wormhole_mastery"] ?: 0) > 0 && (tierId == "shuttle" || tierId == "corvette")) return true
         val tier = SHIP_TIERS.first { it.id == tierId }
-        return fleetPower >= tier.unlockPower
+        if (tier.sectorId != activeSectorId) return false
+        
+        val targetShipId = tier.unlockShipsId ?: return true
+        val count = activeShips[targetShipId]?.count ?: 0
+        return count >= tier.unlockShipsCount
     }
 
     fun canAffordShip(tierId: String): Boolean = credits >= getShipCost(tierId)
