@@ -8,6 +8,9 @@ data class ShipTier(
     val baseCost: Double,
     val baseIncome: Double,       // credits per second per ship
     val basePower: Double,        // fleet power per ship
+    val sectorId: String,
+    val unlockShipsId: String? = null,
+    val unlockShipsCount: Int = 0,
     val costMultiplier: Double = 1.17,
     val unlockPower: Double = 0.0 // fleet power needed to unlock in active sector
 )
@@ -16,62 +19,74 @@ val SHIP_TIERS = listOf(
     ShipTier(
         id = "probe", name = "Recon Probe", emoji = "📡",
         description = "Automated deep-space scanner.",
-        baseCost = 10.0, baseIncome = 0.2, basePower = 1.0, unlockPower = 0.0
+        baseCost = 10.0, baseIncome = 0.2, basePower = 1.0,
+        sectorId = "solar", unlockShipsId = null, unlockShipsCount = 0
     ),
     ShipTier(
         id = "shuttle", name = "Scout Shuttle", emoji = "🛸",
         description = "Light recon vessel. Cheap and reliable.",
-        baseCost = 150.0, baseIncome = 1.5, basePower = 5.0, unlockPower = 8.0
+        baseCost = 150.0, baseIncome = 1.5, basePower = 5.0,
+        sectorId = "solar", unlockShipsId = "probe", unlockShipsCount = 10
     ),
     ShipTier(
         id = "corvette", name = "Patrol Corvette", emoji = "⚡",
         description = "Fast attack craft for border patrols.",
-        baseCost = 2_500.0, baseIncome = 10.0, basePower = 25.0, unlockPower = 60.0
+        baseCost = 2_500.0, baseIncome = 10.0, basePower = 25.0,
+        sectorId = "solar", unlockShipsId = "shuttle", unlockShipsCount = 10
     ),
     ShipTier(
         id = "frigate", name = "Cargo Frigate", emoji = "🚀",
         description = "Hauler with decent cargo capacity.",
-        baseCost = 50_000.0, baseIncome = 60.0, basePower = 130.0, unlockPower = 400.0
+        baseCost = 50_000.0, baseIncome = 60.0, basePower = 130.0,
+        sectorId = "nebula", unlockShipsId = null, unlockShipsCount = 0
     ),
     ShipTier(
         id = "cruiser", name = "Mining Cruiser", emoji = "⛏️",
         description = "Mid-range vessel built for asteroid mining.",
-        baseCost = 1_200_000.0, baseIncome = 350.0, basePower = 700.0, unlockPower = 2_500.0
+        baseCost = 1_200_000.0, baseIncome = 350.0, basePower = 700.0,
+        sectorId = "nebula", unlockShipsId = "frigate", unlockShipsCount = 10
     ),
     ShipTier(
         id = "destroyer", name = "Battle Destroyer", emoji = "💥",
         description = "Heavy warship. Earns bounties from patrols.",
-        baseCost = 35_000_000.0, baseIncome = 2_200.0, basePower = 4_500.0, unlockPower = 15_000.0
+        baseCost = 35_000_000.0, baseIncome = 2_200.0, basePower = 4_500.0,
+        sectorId = "nebula", unlockShipsId = "cruiser", unlockShipsCount = 10
     ),
     ShipTier(
         id = "battlecruiser", name = "Battlecruiser", emoji = "🔱",
         description = "Versatile capital ship with heavy armament.",
-        baseCost = 1_200_000_000.0, baseIncome = 15_000.0, basePower = 30_000.0, unlockPower = 100_000.0
+        baseCost = 1_200_000_000.0, baseIncome = 15_000.0, basePower = 30_000.0,
+        sectorId = "deepspace", unlockShipsId = null, unlockShipsCount = 0
     ),
     ShipTier(
         id = "carrier", name = "Carrier Flagship", emoji = "🛡️",
         description = "Command vessel. Deploys fighter wings.",
-        baseCost = 50_000_000_000.0, baseIncome = 100_000.0, basePower = 200_000.0, unlockPower = 800_000.0
+        baseCost = 50_000_000_000.0, baseIncome = 100_000.0, basePower = 200_000.0,
+        sectorId = "deepspace", unlockShipsId = "battlecruiser", unlockShipsCount = 10
     ),
     ShipTier(
         id = "titan", name = "Titan Warship", emoji = "🏛️",
         description = "Massive siege platform. Cracks planets.",
-        baseCost = 2_500_000_000_000.0, baseIncome = 750_000.0, basePower = 1_500_000.0, unlockPower = 6_000_000.0
+        baseCost = 2_500_000_000_000.0, baseIncome = 750_000.0, basePower = 1_500_000.0,
+        sectorId = "core", unlockShipsId = null, unlockShipsCount = 0
     ),
     ShipTier(
         id = "dreadnought", name = "Dreadnought", emoji = "👑",
         description = "Ultimate capital ship. Galaxy-class power.",
-        baseCost = 150_000_000_000_000.0, baseIncome = 6_000_000.0, basePower = 12_000_000.0, unlockPower = 50_000_000.0
+        baseCost = 150_000_000_000_000.0, baseIncome = 6_000_000.0, basePower = 12_000_000.0,
+        sectorId = "core", unlockShipsId = "titan", unlockShipsCount = 10
     ),
     ShipTier(
         id = "leviathan", name = "Leviathan", emoji = "🐉",
         description = "Ancient bio-mechanical warform. Devours stars.",
-        baseCost = 10_000_000_000_000_000.0, baseIncome = 50_000_000.0, basePower = 100_000_000.0, unlockPower = 500_000_000.0
+        baseCost = 10_000_000_000_000_000.0, baseIncome = 50_000_000.0, basePower = 100_000_000.0,
+        sectorId = "void", unlockShipsId = null, unlockShipsCount = 0
     ),
     ShipTier(
         id = "dyson", name = "Dyson Sphere", emoji = "☀️",
         description = "Harnesses an entire star. The endgame.",
-        baseCost = 800_000_000_000_000_000.0, baseIncome = 500_000_000.0, basePower = 1_000_000_000.0, unlockPower = 5_000_000_000.0
+        baseCost = 800_000_000_000_000_000.0, baseIncome = 500_000_000.0, basePower = 1_000_000_000.0,
+        sectorId = "void", unlockShipsId = "leviathan", unlockShipsCount = 3
     )
 )
 
