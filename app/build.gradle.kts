@@ -5,12 +5,12 @@ plugins {
 
 android {
     namespace = "com.starfleet.idle"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "uk.co.royhillis.starfleetidle"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
     }
