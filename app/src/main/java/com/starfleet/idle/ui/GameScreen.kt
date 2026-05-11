@@ -2,6 +2,7 @@ package com.starfleet.idle.ui
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -32,11 +33,11 @@ fun GameScreen(viewModel: GameViewModel) {
     var showHardResetDialog by remember { mutableStateOf(false) }
     var showCreditsDialog by remember { mutableStateOf(false) }
 
-    val tabs = listOf("🚀 Fleet", "🏪 Shop", "🔬 Research", "✨ Perks", "💎 Premium")
+    val tabs = listOf("🚀 Fleet", "💎 Premium", "🏪 Shop", "🔬 Research", "✨ Perks", "📊 Stats")
 
     Box(modifier = Modifier.fillMaxSize().background(SpaceBlack)) {
         Column(modifier = Modifier.fillMaxSize()) {
-            StatsBar(state = state)
+            StatsBar(state = state, onGetGems = { selectedTab = 1 })
 
             // Sector selector
             SectorSelector(state = state, onSwitch = { viewModel.switchSector(it) })
@@ -75,10 +76,11 @@ fun GameScreen(viewModel: GameViewModel) {
 
                     when (selectedTab) {
                         0 -> FleetTab(viewModel, state, { showPrestigeDialog = true }, { showHardResetDialog = true }, { showCreditsDialog = true })
-                        1 -> ShopScreen(state, { viewModel.buyShopBonus(it) }, { viewModel.tap() })
-                        2 -> ResearchScreen(state) { viewModel.buyResearch(it) }
-                        3 -> PerkScreen(state) { viewModel.buyPerk(it) }
-                        4 -> PremiumScreen(state, { viewModel.activateAdBoost() }, { viewModel.activateSpeedBoost() }, { viewModel.buyGemItem(it) }, { viewModel.purchaseGemPack(it) })
+                        1 -> PremiumScreen(state, { viewModel.activateAdBoost() }, { viewModel.activateSpeedBoost() }, { viewModel.buyGemItem(it) }, { viewModel.purchaseGemPack(it) })
+                        2 -> ShopScreen(state, { viewModel.buyShopBonus(it) }, { viewModel.tap() })
+                        3 -> ResearchScreen(state) { viewModel.buyResearch(it) }
+                        4 -> PerkScreen(state) { viewModel.buyPerk(it) }
+                        5 -> StatsScreen(gameState = state)
                     }
                 }
             }
@@ -375,7 +377,7 @@ private fun FleetTab(viewModel: GameViewModel, state: GameState, onPrestige: () 
     Column(modifier = Modifier.fillMaxSize()) {
         BuyAmountSelector(selected = state.buyAmount, onSelect = { viewModel.setBuyAmount(it) })
 
-        // Ad boost indicator
+        // Ad boost indicator or prompt
         if (state.isAdBoostActive) {
             Row(
                 modifier = Modifier.fillMaxWidth().background(NebulaPurple.copy(alpha = 0.2f)).padding(horizontal = 16.dp, vertical = 4.dp),
@@ -383,6 +385,19 @@ private fun FleetTab(viewModel: GameViewModel, state: GameState, onPrestige: () 
             ) {
                 val min = state.adBoostRemainingMs / 60_000
                 Text("⚡ 2x INCOME · ${min / 60}h ${min % 60}m left", color = ShieldGreen, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            }
+        } else {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(CreditGold.copy(alpha = 0.1f))
+                    .clickable { viewModel.activateAdBoost() }
+                    .padding(horizontal = 16.dp, vertical = 6.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("📺 Watch Ad for 2x Income (1hr) ", color = CreditGold, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Text("▶", color = NebulaPurple, fontSize = 14.sp, fontWeight = FontWeight.Bold)
             }
         }
 

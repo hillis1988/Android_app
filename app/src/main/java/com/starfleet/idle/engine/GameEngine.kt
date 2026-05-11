@@ -14,14 +14,17 @@ object GameEngine {
         val cps = state.creditsPerSecond
         val earned = cps * elapsed
 
-        // Research point accumulation
+        // Research point accumulation with fractional tracking
         val rpEarned = state.researchPointGenRate * elapsed
-        val newRp = state.researchPoints + rpEarned.toInt()
+        val totalFraction = state.researchPointsFraction + rpEarned
+        val wholeRp = totalFraction.toInt()
+        val remainingFraction = totalFraction - wholeRp
 
         return state.copy(
             credits = state.credits + earned,
             totalCreditsEarned = state.totalCreditsEarned + earned,
-            researchPoints = if (rpEarned >= 1.0) newRp else state.researchPoints,
+            researchPoints = state.researchPoints + wholeRp,
+            researchPointsFraction = remainingFraction,
             lastTickTime = now
         )
     }
@@ -123,12 +126,20 @@ object GameEngine {
         )
     }
 
+    private const val TAP_COOLDOWN_MS = 2000L
+
     fun tap(state: GameState): GameState {
+        val now = System.currentTimeMillis()
+        if (now - state.lastTapTime < TAP_COOLDOWN_MS) return state
+
         val earned = state.tapCredits
         if (earned <= 0) return state
         return state.copy(
             credits = state.credits + earned,
-            totalCreditsEarned = state.totalCreditsEarned + earned
+            totalCreditsEarned = state.totalCreditsEarned + earned,
+            totalTaps = state.totalTaps + 1,
+            totalCreditsFromTaps = state.totalCreditsFromTaps + earned,
+            lastTapTime = now
         )
     }
 
@@ -247,24 +258,33 @@ object GameEngine {
 
         when (item.type) {
             GemItemType.TIME_WARP_1H -> {
-                val earned = newState.creditsPerSecond * 3600
+                val seconds = 3600.0
+                val earned = newState.creditsPerSecond * seconds
+                val rpEarned = (newState.researchPointGenRate * seconds).toInt()
                 newState = newState.copy(
                     credits = newState.credits + earned,
-                    totalCreditsEarned = newState.totalCreditsEarned + earned
+                    totalCreditsEarned = newState.totalCreditsEarned + earned,
+                    researchPoints = newState.researchPoints + rpEarned
                 )
             }
             GemItemType.TIME_WARP_4H -> {
-                val earned = newState.creditsPerSecond * 3600 * 4
+                val seconds = 3600.0 * 4
+                val earned = newState.creditsPerSecond * seconds
+                val rpEarned = (newState.researchPointGenRate * seconds).toInt()
                 newState = newState.copy(
                     credits = newState.credits + earned,
-                    totalCreditsEarned = newState.totalCreditsEarned + earned
+                    totalCreditsEarned = newState.totalCreditsEarned + earned,
+                    researchPoints = newState.researchPoints + rpEarned
                 )
             }
             GemItemType.TIME_WARP_8H -> {
-                val earned = newState.creditsPerSecond * 3600 * 8
+                val seconds = 3600.0 * 8
+                val earned = newState.creditsPerSecond * seconds
+                val rpEarned = (newState.researchPointGenRate * seconds).toInt()
                 newState = newState.copy(
                     credits = newState.credits + earned,
-                    totalCreditsEarned = newState.totalCreditsEarned + earned
+                    totalCreditsEarned = newState.totalCreditsEarned + earned,
+                    researchPoints = newState.researchPoints + rpEarned
                 )
             }
             GemItemType.PERMANENT_INCOME_5 -> {

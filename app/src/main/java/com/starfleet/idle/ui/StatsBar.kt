@@ -1,12 +1,14 @@
 package com.starfleet.idle.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -14,7 +16,7 @@ import com.starfleet.idle.data.GameState
 import com.starfleet.idle.ui.theme.*
 
 @Composable
-fun StatsBar(state: GameState) {
+fun StatsBar(state: GameState, onGetGems: () -> Unit = {}) {
     Column(
         modifier = Modifier.fillMaxWidth().background(DeepSpace).padding(horizontal = 16.dp, vertical = 10.dp)
     ) {
@@ -36,7 +38,18 @@ fun StatsBar(state: GameState) {
                 Text("🪙 ${state.starCoins}", color = CreditGold, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 Text(" · ", color = TextSecondary, fontSize = 11.sp)
             }
-            Text("💎 ${state.gems}", color = NebulaPurple, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            // Tappable gem display that navigates to Premium tab
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(NebulaPurple.copy(alpha = 0.2f))
+                    .clickable { onGetGems() }
+                    .padding(horizontal = 8.dp, vertical = 2.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("💎 ${state.gems}", color = NebulaPurple, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                Text(" +", color = ShieldGreen, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            }
             Text(" · ", color = TextSecondary, fontSize = 11.sp)
             Text("🧪 ${state.researchPoints} RP", color = StarBlue, fontSize = 11.sp)
             if (state.isAdBoostActive) {

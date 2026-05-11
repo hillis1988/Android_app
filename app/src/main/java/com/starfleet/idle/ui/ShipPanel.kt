@@ -61,8 +61,11 @@ fun ShipPanel(
                         }
                         Text(text = requirement, color = AlertRed, fontSize = 11.sp)
                     } else {
+                        val shipIncome = getShipIncome(tier, shipState, gameState)
+                        val totalCps = gameState.creditsPerSecond
+                        val pct = if (totalCps > 0) (shipIncome / totalCps * 100) else 0.0
                         Text(
-                            text = "Owned: ${shipState.count} · Income: ${formatNumber(getShipIncome(tier, shipState, gameState))}/s",
+                            text = "Owned: ${shipState.count} · Income: ${formatNumber(shipIncome)}/s · ${String.format("%.1f", pct)}%",
                             color = TextSecondary, fontSize = 11.sp
                         )
                         if (milestoneMulti > 1.0) {

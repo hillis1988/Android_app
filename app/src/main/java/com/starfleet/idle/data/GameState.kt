@@ -20,6 +20,7 @@ data class GameState(
     val researchLevels: Map<String, Int> = RESEARCH_NODES.associate { it.id to 0 },
     val perkLevels: Map<String, Int> = STAR_COIN_PERKS.associate { it.id to 0 },
     val researchPoints: Int = 0,
+    val researchPointsFraction: Double = 0.0,
     val starCoins: Int = 0,
     val totalPrestigeResets: Int = 0,
     val unlockedAchievements: Set<String> = emptySet(),
@@ -30,6 +31,9 @@ data class GameState(
     val speedBoostEndTime: Long = 0L,
     val buyAmount: BuyAmount = BuyAmount.X1,
     val lastTickTime: Long = System.currentTimeMillis(),
+    val lastTapTime: Long = 0L,
+    val totalTaps: Long = 0L,
+    val totalCreditsFromTaps: Double = 0.0,
     val gameStartTime: Long = System.currentTimeMillis()
 ) {
     // --- Active sector helpers ---
@@ -75,22 +79,23 @@ data class GameState(
         return (node.baseCost * Math.pow(node.costScaling, level.toDouble())).toInt()
     }
 
-    // --- Total fleet power across ALL sectors (no unlock check — avoids circular dep) ---
-    val totalFleetPower: Double
-        get() {
-            var total = 0.0
-            SECTORS.forEach { sector ->
-                val sectorState = sectors[sector.id] ?: SectorState()
-                val sectorPower = SHIP_TIERS.sumOf { tier ->
-                    val state = sectorState.ships[tier.id] ?: ShipState()
-                    val milestoneMulti = getMilestoneMultiplier(state.count)
-                    state.count * tier.basePower * milestoneMulti
-                }
-                val shopPowerMult = 1.0 + ((sectorState.shopLevels["shield_array"] ?: 0) * 0.15)
-                total += sectorPower * shopPowerMult * sector.incomeMultiplier
-            }
-            return total * researchFleetPowerMultiplier
+    // --- Fleet power calculations ---
+    fun getSectorPower(sectorId: String): Double {
+        val sector = SECTORS.find { it.id == sectorId } ?: return 0.0
+        val sectorState = sectors[sectorId] ?: SectorState()
+        val rawSectorPower = SHIP_TIERS.sumOf { tier ->
+            val state = sectorState.ships[tier.id] ?: ShipState()
+            val milestoneMulti = getMilestoneMultiplier(state.count)
+            state.count * tier.basePower * milestoneMulti
         }
+        val shopPowerMult = 1.0 + ((sectorState.shopLevels["shield_array"] ?: 0) * 0.15)
+        return rawSectorPower * shopPowerMult * sector.incomeMultiplier * researchFleetPowerMultiplier
+    }
+
+    val fleetPower: Double get() = getSectorPower(activeSectorId)
+
+    val totalFleetPower: Double
+        get() = SECTORS.sumOf { getSectorPower(it.id) }
 
     // --- Sector unlock ---
     fun isSectorUnlocked(sectorId: String): Boolean {
@@ -128,27 +133,35 @@ data class GameState(
     val globalIncomeMultiplier: Double
         get() {
             val level = activeShopLevels["warp_drive"] ?: 0
-            return 1.0 + (level * 0.20)
+            return 1.0 + (level * 0.08) // 8% per level (was 20%)
         }
 
     val costReductionFactor: Double
         get() {
             val level = activeShopLevels["trade_routes"] ?: 0
             val perkBonus = if ((perkLevels["speed_docking"] ?: 0) > 0) 0.90 else 1.0
-            return Math.pow(0.97, level.toDouble()) * researchCostReduction * perkBonus
+            return Math.pow(0.98, level.toDouble()) * researchCostReduction * perkBonus // 2% per level (was 3%)
         }
 
     val offlineEfficiency: Double
         get() {
             val level = activeShopLevels["auto_pilot"] ?: 0
-            return 0.4 + (level * 0.08)
+            return 0.4 + (level * 0.05) // 5% per level (was 8%)
         }
 
+    // Tap gives a FLAT amount based on total credits earned (not CPS).
+    // This prevents autoclickers from being useful — even at 100 taps/sec,
+    // the total is capped and scales very slowly.
     val tapCredits: Double
         get() {
             val level = activeShopLevels["command_bridge"] ?: 0
             if (level == 0) return 0.0
-            return maxOf(1.0, creditsPerSecond * 0.3 * level)
+            // Gives 0.1% of CPS per tap, with a hard cap of 2 seconds of income per tap
+            // At max level 5: 0.5% of CPS per tap = 0.005 * CPS
+            // Even at 20 taps/sec that's only 0.1 * CPS = 10% boost, not game-breaking
+            val perTap = creditsPerSecond * 0.001 * level
+            val cap = creditsPerSecond * 2.0 // max 2 seconds of income per tap
+            return minOf(maxOf(1.0, perTap), cap)
         }
 
     // --- Research point gen rate (uses totalFleetPower, safe) ---
@@ -164,36 +177,21 @@ data class GameState(
     val creditsPerSecond: Double
         get() {
             var totalIncome = 0.0
-            val activeSectorIndex = SECTORS.indexOfFirst { it.id == activeSectorId }
 
-            SECTORS.forEachIndexed { index, sector ->
+            SECTORS.forEach { sector ->
                 val sectorState = sectors[sector.id] ?: SectorState()
 
-                // Skip sectors with no ships at all
                 val hasShips = sectorState.ships.values.any { it.count > 0 }
-                if (!hasShips) return@forEachIndexed
+                if (!hasShips) return@forEach
 
-                val penalty = if (index < activeSectorIndex) {
-                    val longRangeLevel = researchLevels["long_range"] ?: 0
-                    val basePenalty = sector.previousSectorPenalty
-                    minOf(1.0, basePenalty + (longRangeLevel * 0.10))
-                } else if (sector.id == activeSectorId) {
-                    1.0
-                } else {
-                    0.0
-                }
-
-                if (penalty <= 0.0) return@forEachIndexed
-
-                val shopIncomeMult = 1.0 + ((sectorState.shopLevels["warp_drive"] ?: 0) * 0.20)
-                val specialtyIncomeMult = if (sector.specialty == SectorSpecialty.FAST_PROGRESS) 0.5 else 1.0
+                val shopIncomeMult = 1.0 + ((sectorState.shopLevels["warp_drive"] ?: 0) * 0.08)
 
                 val sectorIncome = SHIP_TIERS.sumOf { tier ->
                     val state = sectorState.ships[tier.id] ?: ShipState()
                     if (state.count == 0) return@sumOf 0.0
                     val milestoneMulti = getMilestoneMultiplier(state.count)
                     val baseIncome = tier.baseIncome * state.count * milestoneMulti * sector.incomeMultiplier
-                    
+
                     val upgradeSpecialtyMult = if (sector.specialty == SectorSpecialty.UPGRADE_EFFICIENCY) 1.25 else 1.0
                     val upgradeMultiplier = UPGRADE_TYPES.sumOf { upgrade ->
                         val level = state.upgradeLevels[upgrade.id] ?: 0
@@ -202,7 +200,7 @@ data class GameState(
                     baseIncome * (1.0 + upgradeMultiplier)
                 }
 
-                totalIncome += sectorIncome * shopIncomeMult * penalty * specialtyIncomeMult
+                totalIncome += sectorIncome * shopIncomeMult
             }
 
             return totalIncome * prestigeMultiplier * researchIncomeMultiplier * adBoostMultiplier * speedMultiplier * (1.0 + gemBonusIncome)

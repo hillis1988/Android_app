@@ -14,10 +14,13 @@ class GameRepository(context: Context) {
         val json = JSONObject().apply {
             put("credits", state.credits)
             put("totalCreditsEarned", state.totalCreditsEarned)
+            put("totalTaps", state.totalTaps)
+            put("totalCreditsFromTaps", state.totalCreditsFromTaps)
             put("gems", state.gems)
             put("gemBonusIncome", state.gemBonusIncome)
             put("activeSectorId", state.activeSectorId)
             put("researchPoints", state.researchPoints)
+            put("researchPointsFraction", state.researchPointsFraction)
             put("starCoins", state.starCoins)
             put("totalPrestigeResets", state.totalPrestigeResets)
             put("dailyLoginStreak", state.dailyLoginStreak)
@@ -130,6 +133,8 @@ class GameRepository(context: Context) {
             GameState(
                 credits = json.getDouble("credits"),
                 totalCreditsEarned = json.getDouble("totalCreditsEarned"),
+                totalTaps = json.optLong("totalTaps", 0L),
+                totalCreditsFromTaps = json.optDouble("totalCreditsFromTaps", 0.0),
                 gems = json.optInt("gems", 0),
                 gemBonusIncome = json.optDouble("gemBonusIncome", 0.0),
                 sectors = sectors,
@@ -137,6 +142,7 @@ class GameRepository(context: Context) {
                 researchLevels = researchLevels,
                 perkLevels = perkLevels,
                 researchPoints = json.optInt("researchPoints", 0),
+                researchPointsFraction = json.optDouble("researchPointsFraction", 0.0),
                 starCoins = json.optInt("starCoins", 0),
                 totalPrestigeResets = json.optInt("totalPrestigeResets", 0),
                 unlockedAchievements = achievements,
