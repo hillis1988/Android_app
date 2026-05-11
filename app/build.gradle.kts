@@ -8,7 +8,7 @@ android {
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.starfleet.idle"
+        applicationId = "uk.co.royhillis.starfleetidle"
         minSdk = 26
         targetSdk = 34
         versionCode = 1
