@@ -305,11 +305,16 @@ object GameEngine {
     }
 
     // --- Gem IAP packs ---
-    fun purchaseGemPack(state: GameState, packId: String): GameState {
-        val pack = GEM_PACKS.first { it.id == packId }
+    // In dev mode or after Google Play confirms a purchase, this grants the gems.
+    fun grantGemPack(state: GameState, packId: String): GameState {
+        val pack = GEM_PACKS.firstOrNull { it.id == packId } ?: return state
         val totalGems = pack.gems + pack.bonusGems
         return state.copy(gems = state.gems + totalGems)
     }
+
+    // Kept for backward compatibility
+    @Deprecated("Use grantGemPack instead", ReplaceWith("grantGemPack(state, packId)"))
+    fun purchaseGemPack(state: GameState, packId: String): GameState = grantGemPack(state, packId)
 
     // --- Double offline earnings (ad reward) ---
     fun doubleOfflineEarnings(state: GameState, earnings: Double): GameState {
@@ -370,6 +375,48 @@ object GameEngine {
                     activateAdBoost(state)
                 } else {
                     state.copy(starCoins = state.starCoins + 5)
+                }
+            }
+            else -> state
+        }
+    }
+
+    // --- Random Encounters ---
+    fun handleEncounter(state: GameState, encounter: EncounterData, optionIndex: Int): GameState {
+        return when (encounter.type) {
+            "asteroid" -> {
+                if (optionIndex == 0) {
+                    // Mine for credits: 30 minutes of income
+                    val earned = state.creditsPerSecond * 1800
+                    state.copy(credits = state.credits + earned, totalCreditsEarned = state.totalCreditsEarned + earned)
+                } else {
+                    // Extract gems
+                    state.copy(gems = state.gems + 5)
+                }
+            }
+            "trader" -> {
+                if (optionIndex == 0) {
+                    // Pay credits for RP
+                    val cost = state.creditsPerSecond * 600
+                    if (state.credits >= cost) {
+                        state.copy(credits = state.credits - cost, researchPoints = state.researchPoints + 3)
+                    } else state
+                } else {
+                    // Trade gems for RP
+                    if (state.gems >= 5) {
+                        state.copy(gems = state.gems - 5, researchPoints = state.researchPoints + 8)
+                    } else state
+                }
+            }
+            "anomaly" -> {
+                if (optionIndex == 0) {
+                    // Study: 1 hour of income
+                    val earned = state.creditsPerSecond * 3600
+                    state.copy(credits = state.credits + earned, totalCreditsEarned = state.totalCreditsEarned + earned)
+                } else {
+                    // Stabilize: star coins
+                    val coins = maxOf(1, state.starCoins / 10)
+                    state.copy(starCoins = state.starCoins + coins)
                 }
             }
             else -> state

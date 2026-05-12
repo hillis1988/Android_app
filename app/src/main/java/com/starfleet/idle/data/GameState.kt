@@ -179,25 +179,25 @@ data class GameState(
             var totalIncome = 0.0
 
             SECTORS.forEach { sector ->
-                val sectorState = sectors[sector.id] ?: SectorState()
-
-                val hasShips = sectorState.ships.values.any { it.count > 0 }
-                if (!hasShips) return@forEach
-
+                val sectorState = sectors[sector.id] ?: return@forEach
                 val shopIncomeMult = 1.0 + ((sectorState.shopLevels["warp_drive"] ?: 0) * 0.08)
 
-                val sectorIncome = SHIP_TIERS.sumOf { tier ->
-                    val state = sectorState.ships[tier.id] ?: ShipState()
-                    if (state.count == 0) return@sumOf 0.0
+                var sectorIncome = 0.0
+                SHIP_TIERS.forEach { tier ->
+                    if (tier.sectorId != sector.id) return@forEach
+                    val state = sectorState.ships[tier.id] ?: return@forEach
+                    if (state.count == 0) return@forEach
+                    
                     val milestoneMulti = getMilestoneMultiplier(state.count)
                     val baseIncome = tier.baseIncome * state.count * milestoneMulti * sector.incomeMultiplier
 
                     val upgradeSpecialtyMult = if (sector.specialty == SectorSpecialty.UPGRADE_EFFICIENCY) 1.25 else 1.0
-                    val upgradeMultiplier = UPGRADE_TYPES.sumOf { upgrade ->
+                    var upgradeMultiplier = 0.0
+                    UPGRADE_TYPES.forEach { upgrade ->
                         val level = state.upgradeLevels[upgrade.id] ?: 0
-                        level * upgrade.incomeBoost * upgradeSpecialtyMult
+                        upgradeMultiplier += level * upgrade.incomeBoost * upgradeSpecialtyMult
                     }
-                    baseIncome * (1.0 + upgradeMultiplier)
+                    sectorIncome += baseIncome * (1.0 + upgradeMultiplier)
                 }
 
                 totalIncome += sectorIncome * shopIncomeMult

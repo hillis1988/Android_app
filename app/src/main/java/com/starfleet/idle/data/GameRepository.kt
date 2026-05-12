@@ -8,7 +8,7 @@ import org.json.JSONObject
 class GameRepository(context: Context) {
 
     private val prefs: SharedPreferences =
-        context.getSharedPreferences("starfleet_idle_save_v2", Context.MODE_PRIVATE)
+        context.getSharedPreferences("starfleet_idle_save_v3", Context.MODE_PRIVATE)
 
     fun save(state: GameState) {
         val json = JSONObject().apply {
