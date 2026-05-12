@@ -35,7 +35,7 @@ fun GameScreen(viewModel: GameViewModel) {
 
     val tabs = listOf("🚀 Fleet", "💎 Premium", "🏪 Shop", "🔬 Research", "✨ Perks", "📊 Stats")
 
-    Box(modifier = Modifier.fillMaxSize().background(SpaceBlack)) {
+    Box(modifier = Modifier.fillMaxSize().background(SpaceBlack).systemBarsPadding()) {
         Column(modifier = Modifier.fillMaxSize()) {
             StatsBar(state = state, onGetGems = { selectedTab = 1 })
 
@@ -54,14 +54,14 @@ fun GameScreen(viewModel: GameViewModel) {
                 }
             }
 
-            AnimatedContent(
-                targetState = state.activeSectorId,
-                transitionSpec = {
-                    (fadeIn(animationSpec = tween(600)) + scaleIn(initialScale = 0.8f))
-                        .togetherWith(fadeOut(animationSpec = tween(600)) + scaleOut(targetScale = 1.2f))
-                },
-                label = "SectorTransition"
-            ) { _ ->
+            // AnimatedContent(
+            //    targetState = state.activeSectorId,
+            //    transitionSpec = {
+            //        (fadeIn(animationSpec = tween(600)) + scaleIn(initialScale = 0.8f))
+            //            .togetherWith(fadeOut(animationSpec = tween(600)) + scaleOut(targetScale = 1.2f))
+            //    },
+            //    label = "SectorTransition"
+            // ) { _ ->
                 Column(modifier = Modifier.fillMaxSize()) {
                     // Specialty Banner
                     val currentSector = state.activeSector
@@ -83,38 +83,40 @@ fun GameScreen(viewModel: GameViewModel) {
                         5 -> StatsScreen(gameState = state)
                     }
                 }
-            }
+            // }
         }
 
         // --- Dialogs ---
 
         // Offline earnings with double option
-        offlineEarnings?.let { earned ->
+        /* offlineEarnings?.let { earned ->
             Dialog(onDismissRequest = { viewModel.dismissOfflineEarnings() }) {
-                Card(colors = CardDefaults.cardColors(containerColor = CardBackground), shape = RoundedCornerShape(16.dp)) {
-                    Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("🌙 Welcome Back, Commander!", color = CreditGold, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                        Spacer(Modifier.height(12.dp))
-                        Text("Your fleet earned while you were away:", color = TextSecondary, fontSize = 14.sp, textAlign = TextAlign.Center)
-                        Spacer(Modifier.height(8.dp))
-                        Text("+${formatNumber(earned)} credits", color = ShieldGreen, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                        Spacer(Modifier.height(16.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            Button(onClick = { viewModel.dismissOfflineEarnings() },
-                                colors = ButtonDefaults.buttonColors(containerColor = DeepSpace)) {
-                                Text("Collect")
+                StarFleetIdleTheme {
+                    Card(colors = CardDefaults.cardColors(containerColor = CardBackground), shape = RoundedCornerShape(16.dp)) {
+                        Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("🌙 Welcome Back, Commander!", color = CreditGold, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                            Spacer(Modifier.height(12.dp))
+                            Text("Your fleet earned while you were away:", color = TextSecondary, fontSize = 14.sp, textAlign = TextAlign.Center)
+                            Spacer(Modifier.height(8.dp))
+                            Text("+${formatNumber(earned)} credits", color = ShieldGreen, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                            Spacer(Modifier.height(16.dp))
+                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                Button(onClick = { viewModel.dismissOfflineEarnings() },
+                                    colors = ButtonDefaults.buttonColors(containerColor = DeepSpace)) {
+                                    Text("Collect")
+                                }
+                                Button(onClick = { viewModel.doubleOfflineEarnings(earned) },
+                                    colors = ButtonDefaults.buttonColors(containerColor = NebulaPurple)) {
+                                    Text("📺 Double It!")
+                                }
                             }
-                            Button(onClick = { viewModel.doubleOfflineEarnings(earned) },
-                                colors = ButtonDefaults.buttonColors(containerColor = NebulaPurple)) {
-                                Text("📺 Double It!")
-                            }
+                            Text("Watch an ad to double your offline earnings", color = TextSecondary, fontSize = 10.sp,
+                                modifier = Modifier.padding(top = 4.dp))
                         }
-                        Text("Watch an ad to double your offline earnings", color = TextSecondary, fontSize = 10.sp,
-                            modifier = Modifier.padding(top = 4.dp))
                     }
                 }
             }
-        }
+        } */
 
         // Daily reward
         if (showDailyReward) {
@@ -122,17 +124,19 @@ fun GameScreen(viewModel: GameViewModel) {
             val reward = if (rewardIndex >= 0) DAILY_REWARDS[rewardIndex] else null
             if (reward != null) {
                 Dialog(onDismissRequest = { viewModel.claimDailyReward() }) {
-                    Card(colors = CardDefaults.cardColors(containerColor = CardBackground), shape = RoundedCornerShape(16.dp)) {
-                        Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("📅 DAILY REWARD", color = CreditGold, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                            Spacer(Modifier.height(8.dp))
-                            Text("Day ${state.dailyLoginStreak} streak!", color = ShieldGreen, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                            Spacer(Modifier.height(8.dp))
-                            Text("${reward.emoji} ${reward.description}", color = TextPrimary, fontSize = 16.sp)
-                            Spacer(Modifier.height(16.dp))
-                            Button(onClick = { viewModel.claimDailyReward() },
-                                colors = ButtonDefaults.buttonColors(containerColor = NebulaPurple)) {
-                                Text("Claim!")
+                    StarFleetIdleTheme {
+                        Card(colors = CardDefaults.cardColors(containerColor = CardBackground), shape = RoundedCornerShape(16.dp)) {
+                            Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text("📅 DAILY REWARD", color = CreditGold, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                                Spacer(Modifier.height(8.dp))
+                                Text("Day ${state.dailyLoginStreak} streak!", color = ShieldGreen, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                                Spacer(Modifier.height(8.dp))
+                                Text("${reward.emoji} ${reward.description}", color = TextPrimary, fontSize = 16.sp)
+                                Spacer(Modifier.height(16.dp))
+                                Button(onClick = { viewModel.claimDailyReward() },
+                                    colors = ButtonDefaults.buttonColors(containerColor = NebulaPurple)) {
+                                    Text("Claim!")
+                                }
                             }
                         }
                     }
@@ -144,19 +148,21 @@ fun GameScreen(viewModel: GameViewModel) {
         if (newAchievements.isNotEmpty()) {
             val achievementNames = newAchievements.mapNotNull { id -> ACHIEVEMENTS.find { it.id == id } }
             Dialog(onDismissRequest = { viewModel.dismissNewAchievements() }) {
-                Card(colors = CardDefaults.cardColors(containerColor = CardBackground), shape = RoundedCornerShape(16.dp)) {
-                    Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("🏆 ACHIEVEMENT UNLOCKED!", color = CreditGold, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                        Spacer(Modifier.height(12.dp))
-                        achievementNames.forEach { a ->
-                            Text("${a.emoji} ${a.name}", color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                            Text("+${a.gemReward} 💎", color = NebulaPurple, fontSize = 12.sp)
-                            Spacer(Modifier.height(4.dp))
-                        }
-                        Spacer(Modifier.height(12.dp))
-                        Button(onClick = { viewModel.dismissNewAchievements() },
-                            colors = ButtonDefaults.buttonColors(containerColor = NebulaPurple)) {
-                            Text("Nice!")
+                StarFleetIdleTheme {
+                    Card(colors = CardDefaults.cardColors(containerColor = CardBackground), shape = RoundedCornerShape(16.dp)) {
+                        Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("🏆 ACHIEVEMENT UNLOCKED!", color = CreditGold, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                            Spacer(Modifier.height(12.dp))
+                            achievementNames.forEach { a ->
+                                Text("${a.emoji} ${a.name}", color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                                Text("+${a.gemReward} 💎", color = NebulaPurple, fontSize = 12.sp)
+                                Spacer(Modifier.height(4.dp))
+                            }
+                            Spacer(Modifier.height(12.dp))
+                            Button(onClick = { viewModel.dismissNewAchievements() },
+                                colors = ButtonDefaults.buttonColors(containerColor = NebulaPurple)) {
+                                Text("Nice!")
+                            }
                         }
                     }
                 }
@@ -167,26 +173,28 @@ fun GameScreen(viewModel: GameViewModel) {
         currentEncounter?.let { data ->
             val ui = getEncounterUI(data.type)
             Dialog(onDismissRequest = { viewModel.dismissEncounter() }) {
-                Card(colors = CardDefaults.cardColors(containerColor = CardBackground), shape = RoundedCornerShape(16.dp)) {
-                    Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(ui.emoji, fontSize = 48.sp)
-                        Spacer(Modifier.height(8.dp))
-                        Text(ui.title, color = CreditGold, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                        Spacer(Modifier.height(12.dp))
-                        Text(ui.description, color = TextPrimary, fontSize = 14.sp, textAlign = TextAlign.Center)
-                        Spacer(Modifier.height(20.dp))
-                        ui.options.forEachIndexed { index, option ->
-                            Button(
-                                onClick = { viewModel.handleEncounter(index) },
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = ButtonDefaults.buttonColors(containerColor = DeepSpace)
-                            ) {
-                                Text(option)
-                            }
+                StarFleetIdleTheme {
+                    Card(colors = CardDefaults.cardColors(containerColor = CardBackground), shape = RoundedCornerShape(16.dp)) {
+                        Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(ui.emoji, fontSize = 48.sp)
                             Spacer(Modifier.height(8.dp))
-                        }
-                        TextButton(onClick = { viewModel.dismissEncounter() }) {
-                            Text("Ignore", color = TextSecondary)
+                            Text(ui.title, color = CreditGold, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                            Spacer(Modifier.height(12.dp))
+                            Text(ui.description, color = TextPrimary, fontSize = 14.sp, textAlign = TextAlign.Center)
+                            Spacer(Modifier.height(20.dp))
+                            ui.options.forEachIndexed { index, option ->
+                                Button(
+                                    onClick = { viewModel.handleEncounter(index) },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = ButtonDefaults.buttonColors(containerColor = DeepSpace)
+                                ) {
+                                    Text(option)
+                                }
+                                Spacer(Modifier.height(8.dp))
+                            }
+                            TextButton(onClick = { viewModel.dismissEncounter() }) {
+                                Text("Ignore", color = TextSecondary)
+                            }
                         }
                     }
                 }
@@ -199,29 +207,31 @@ fun GameScreen(viewModel: GameViewModel) {
             val newTotal = state.starCoins + coinsToEarn
             val newMult = getPrestigeMultiplier(newTotal)
             Dialog(onDismissRequest = { showPrestigeDialog = false }) {
-                Card(colors = CardDefaults.cardColors(containerColor = CardBackground), shape = RoundedCornerShape(16.dp)) {
-                    Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("🪙 PRESTIGE RESET", color = CreditGold, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                        Spacer(Modifier.height(12.dp))
-                        if (coinsToEarn > 0) {
-                            Text("Reset your fleet and earn:", color = TextSecondary, fontSize = 14.sp)
-                            Spacer(Modifier.height(8.dp))
-                            Text("+$coinsToEarn Star Coins", color = CreditGold, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                            Text("Total: $newTotal coins · ${String.format("%.1f", newMult)}x income", color = ShieldGreen, fontSize = 14.sp)
-                            Spacer(Modifier.height(8.dp))
-                            Text("Ships, upgrades, and shop bonuses reset.\nResearch, Gems, and Star Coins are permanent.",
-                                color = TextSecondary, fontSize = 11.sp, textAlign = TextAlign.Center)
-                            Spacer(Modifier.height(16.dp))
-                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                OutlinedButton(onClick = { showPrestigeDialog = false }) { Text("Cancel", color = TextSecondary) }
-                                Button(onClick = { viewModel.prestige(); showPrestigeDialog = false },
-                                    colors = ButtonDefaults.buttonColors(containerColor = NebulaPurple)) { Text("Prestige!") }
+                StarFleetIdleTheme {
+                    Card(colors = CardDefaults.cardColors(containerColor = CardBackground), shape = RoundedCornerShape(16.dp)) {
+                        Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("🪙 PRESTIGE RESET", color = CreditGold, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                            Spacer(Modifier.height(12.dp))
+                            if (coinsToEarn > 0) {
+                                Text("Reset your fleet and earn:", color = TextSecondary, fontSize = 14.sp)
+                                Spacer(Modifier.height(8.dp))
+                                Text("+$coinsToEarn Star Coins", color = CreditGold, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                                Text("Total: $newTotal coins · ${String.format("%.1f", newMult)}x income", color = ShieldGreen, fontSize = 14.sp)
+                                Spacer(Modifier.height(8.dp))
+                                Text("Ships, upgrades, and shop bonuses reset.\nResearch, Gems, and Star Coins are permanent.",
+                                    color = TextSecondary, fontSize = 11.sp, textAlign = TextAlign.Center)
+                                Spacer(Modifier.height(16.dp))
+                                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                    OutlinedButton(onClick = { showPrestigeDialog = false }) { Text("Cancel", color = TextSecondary) }
+                                    Button(onClick = { viewModel.prestige(); showPrestigeDialog = false },
+                                        colors = ButtonDefaults.buttonColors(containerColor = NebulaPurple)) { Text("Prestige!") }
+                                }
+                            } else {
+                                Text("Reach 1,000+ total Fleet Power to earn coins.", color = AlertRed, fontSize = 13.sp, textAlign = TextAlign.Center)
+                                Spacer(Modifier.height(16.dp))
+                                Button(onClick = { showPrestigeDialog = false },
+                                    colors = ButtonDefaults.buttonColors(containerColor = NebulaPurple)) { Text("Got it") }
                             }
-                        } else {
-                            Text("Reach 1,000+ total Fleet Power to earn coins.", color = AlertRed, fontSize = 13.sp, textAlign = TextAlign.Center)
-                            Spacer(Modifier.height(16.dp))
-                            Button(onClick = { showPrestigeDialog = false },
-                                colors = ButtonDefaults.buttonColors(containerColor = NebulaPurple)) { Text("Got it") }
                         }
                     }
                 }
@@ -231,16 +241,18 @@ fun GameScreen(viewModel: GameViewModel) {
         // Hard reset dialog
         if (showHardResetDialog) {
             Dialog(onDismissRequest = { showHardResetDialog = false }) {
-                Card(colors = CardDefaults.cardColors(containerColor = CardBackground), shape = RoundedCornerShape(16.dp)) {
-                    Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("⚠️ HARD RESET", color = AlertRed, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                        Spacer(Modifier.height(12.dp))
-                        Text("Erase EVERYTHING. This cannot be undone.", color = TextSecondary, fontSize = 14.sp, textAlign = TextAlign.Center)
-                        Spacer(Modifier.height(16.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            OutlinedButton(onClick = { showHardResetDialog = false }) { Text("Cancel", color = TextSecondary) }
-                            Button(onClick = { viewModel.hardReset(); showHardResetDialog = false },
-                                colors = ButtonDefaults.buttonColors(containerColor = AlertRed)) { Text("Erase All") }
+                StarFleetIdleTheme {
+                    Card(colors = CardDefaults.cardColors(containerColor = CardBackground), shape = RoundedCornerShape(16.dp)) {
+                        Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("⚠️ HARD RESET", color = AlertRed, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                            Spacer(Modifier.height(12.dp))
+                            Text("Erase EVERYTHING. This cannot be undone.", color = TextSecondary, fontSize = 14.sp, textAlign = TextAlign.Center)
+                            Spacer(Modifier.height(16.dp))
+                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                OutlinedButton(onClick = { showHardResetDialog = false }) { Text("Cancel", color = TextSecondary) }
+                                Button(onClick = { viewModel.hardReset(); showHardResetDialog = false },
+                                    colors = ButtonDefaults.buttonColors(containerColor = AlertRed)) { Text("Erase All") }
+                            }
                         }
                     }
                 }
@@ -258,80 +270,82 @@ fun GameScreen(viewModel: GameViewModel) {
 private fun CreditsDialog(onDismiss: () -> Unit) {
     val context = androidx.compose.ui.platform.LocalContext.current
     Dialog(onDismissRequest = onDismiss) {
-        Card(
-            colors = CardDefaults.cardColors(containerColor = CardBackground),
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+        StarFleetIdleTheme {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = CardBackground),
+                shape = RoundedCornerShape(16.dp)
             ) {
-                Text("⭐ CREDITS", color = CreditGold, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(16.dp))
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text("⭐ CREDITS", color = CreditGold, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.height(16.dp))
 
-                Text("StarFleet Idle", color = TextPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                Text("v1.0", color = TextSecondary, fontSize = 12.sp)
+                    Text("StarFleet Idle", color = TextPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    Text("v1.0", color = TextSecondary, fontSize = 12.sp)
 
-                Spacer(Modifier.height(16.dp))
-                Divider(color = DeepSpace, thickness = 1.dp)
-                Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(16.dp))
+                    Divider(color = DeepSpace, thickness = 1.dp)
+                    Spacer(Modifier.height(16.dp))
 
-                Text("Created by", color = TextSecondary, fontSize = 12.sp)
-                Spacer(Modifier.height(8.dp))
+                    Text("Created by", color = TextSecondary, fontSize = 12.sp)
+                    Spacer(Modifier.height(8.dp))
 
-                Text("Roy Hillis", color = TextPrimary, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                Text("&", color = TextSecondary, fontSize = 14.sp)
-                Text("Abbie Hillis", color = TextPrimary, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Text("Roy Hillis", color = TextPrimary, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Text("&", color = TextSecondary, fontSize = 14.sp)
+                    Text("Abbie Hillis", color = TextPrimary, fontSize = 18.sp, fontWeight = FontWeight.Bold)
 
-                Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(16.dp))
 
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(
-                        onClick = { /* In-app purchase logic here later */ },
-                        colors = ButtonDefaults.buttonColors(containerColor = NebulaPurple),
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("☕ Buy Abbie a Frappe (£5)", fontSize = 11.sp, textAlign = TextAlign.Center)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(
+                            onClick = { /* In-app purchase logic here later */ },
+                            colors = ButtonDefaults.buttonColors(containerColor = NebulaPurple),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("☕ Buy Abbie a Frappe (£5)", fontSize = 11.sp, textAlign = TextAlign.Center)
+                        }
+                        Button(
+                            onClick = { /* In-app purchase logic here later */ },
+                            colors = ButtonDefaults.buttonColors(containerColor = StarBlue),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("🍺 Buy Roy a Pint (£5)", fontSize = 11.sp, textAlign = TextAlign.Center)
+                        }
                     }
+
+                    Spacer(Modifier.height(16.dp))
+
                     Button(
-                        onClick = { /* In-app purchase logic here later */ },
+                        onClick = {
+                            val intent = android.content.Intent(
+                                android.content.Intent.ACTION_VIEW,
+                                android.net.Uri.parse("https://www.linkedin.com/in/roy-hillis-529146207")
+                            )
+                            context.startActivity(intent)
+                        },
                         colors = ButtonDefaults.buttonColors(containerColor = StarBlue),
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.weight(1f)
+                        shape = RoundedCornerShape(8.dp)
                     ) {
-                        Text("🍺 Buy Roy a Pint (£5)", fontSize = 11.sp, textAlign = TextAlign.Center)
+                        Text("\uD83D\uDD17 Roy on LinkedIn", fontSize = 13.sp)
                     }
-                }
 
-                Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(16.dp))
+                    Divider(color = DeepSpace, thickness = 1.dp)
+                    Spacer(Modifier.height(12.dp))
 
-                Button(
-                    onClick = {
-                        val intent = android.content.Intent(
-                            android.content.Intent.ACTION_VIEW,
-                            android.net.Uri.parse("https://www.linkedin.com/in/roy-hillis-529146207")
-                        )
-                        context.startActivity(intent)
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = StarBlue),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text("\uD83D\uDD17 Roy on LinkedIn", fontSize = 13.sp)
-                }
+                    Text("Thank you for playing!", color = CreditGold, fontSize = 13.sp)
 
-                Spacer(Modifier.height(16.dp))
-                Divider(color = DeepSpace, thickness = 1.dp)
-                Spacer(Modifier.height(12.dp))
-
-                Text("Thank you for playing!", color = CreditGold, fontSize = 13.sp)
-
-                Spacer(Modifier.height(16.dp))
-                Button(
-                    onClick = onDismiss,
-                    colors = ButtonDefaults.buttonColors(containerColor = NebulaPurple)
-                ) {
-                    Text("Close")
+                    Spacer(Modifier.height(16.dp))
+                    Button(
+                        onClick = onDismiss,
+                        colors = ButtonDefaults.buttonColors(containerColor = NebulaPurple)
+                    ) {
+                        Text("Close")
+                    }
                 }
             }
         }

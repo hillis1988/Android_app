@@ -340,4 +340,4 @@ val GEM_PACKS = listOf(
 )
 
 // Set to true for development (all packs are free), false for production
-const val DEV_MODE_FREE_GEMS = true
+const val DEV_MODE_FREE_GEMS = false
