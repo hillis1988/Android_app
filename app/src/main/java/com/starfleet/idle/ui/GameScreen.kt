@@ -35,7 +35,7 @@ fun GameScreen(viewModel: GameViewModel) {
 
     val tabs = listOf("🚀 Fleet", "💎 Premium", "🏪 Shop", "🔬 Research", "✨ Perks", "📊 Stats")
 
-    Box(modifier = Modifier.fillMaxSize().background(SpaceBlack).systemBarsPadding()) {
+    Box(modifier = Modifier.fillMaxSize().background(SpaceBlack)) {
         Column(modifier = Modifier.fillMaxSize()) {
             StatsBar(state = state, onGetGems = { selectedTab = 1 })
 

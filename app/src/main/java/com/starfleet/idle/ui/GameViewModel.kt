@@ -32,6 +32,19 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     private val _showDailyReward = MutableStateFlow(false)
     val showDailyReward: StateFlow<Boolean> = _showDailyReward
 
+    // Callback injected from MainActivity to launch Google Play Billing
+    private var purchaseLauncher: ((String) -> Unit)? = null
+
+    fun setPurchaseLauncher(launcher: (String) -> Unit) {
+        purchaseLauncher = launcher
+    }
+
+    /** Called by BillingManager when a purchase is verified by Google Play. */
+    fun grantGemsFromPurchase(productId: String) {
+        _state.value = GameEngine.grantGemPack(_state.value, productId)
+        repository.save(_state.value)
+    }
+
     init {
         loadGame()
         startGameLoop()
@@ -162,7 +175,14 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun purchaseGemPack(packId: String) {
-        _state.value = GameEngine.purchaseGemPack(_state.value, packId)
+        // In dev mode (DEV_MODE_FREE_GEMS = true), grant gems instantly for free
+        // In production, launch Google Play Billing dialog
+        if (com.starfleet.idle.data.DEV_MODE_FREE_GEMS) {
+            _state.value = GameEngine.grantGemPack(_state.value, packId)
+            repository.save(_state.value)
+        } else {
+            purchaseLauncher?.invoke(packId)
+        }
     }
 
     fun dismissOfflineEarnings() {

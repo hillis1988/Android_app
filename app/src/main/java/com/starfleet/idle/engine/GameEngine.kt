@@ -305,11 +305,16 @@ object GameEngine {
     }
 
     // --- Gem IAP packs ---
-    fun purchaseGemPack(state: GameState, packId: String): GameState {
-        val pack = GEM_PACKS.first { it.id == packId }
+    // In dev mode or after Google Play confirms a purchase, this grants the gems.
+    fun grantGemPack(state: GameState, packId: String): GameState {
+        val pack = GEM_PACKS.firstOrNull { it.id == packId } ?: return state
         val totalGems = pack.gems + pack.bonusGems
         return state.copy(gems = state.gems + totalGems)
     }
+
+    // Kept for backward compatibility
+    @Deprecated("Use grantGemPack instead", ReplaceWith("grantGemPack(state, packId)"))
+    fun purchaseGemPack(state: GameState, packId: String): GameState = grantGemPack(state, packId)
 
     // --- Double offline earnings (ad reward) ---
     fun doubleOfflineEarnings(state: GameState, earnings: Double): GameState {
