@@ -376,6 +376,48 @@ object GameEngine {
         }
     }
 
+    // --- Random Encounters ---
+    fun handleEncounter(state: GameState, encounter: EncounterData, optionIndex: Int): GameState {
+        return when (encounter.type) {
+            "asteroid" -> {
+                if (optionIndex == 0) {
+                    // Mine for credits: 30 minutes of income
+                    val earned = state.creditsPerSecond * 1800
+                    state.copy(credits = state.credits + earned, totalCreditsEarned = state.totalCreditsEarned + earned)
+                } else {
+                    // Extract gems
+                    state.copy(gems = state.gems + 5)
+                }
+            }
+            "trader" -> {
+                if (optionIndex == 0) {
+                    // Pay credits for RP
+                    val cost = state.creditsPerSecond * 600
+                    if (state.credits >= cost) {
+                        state.copy(credits = state.credits - cost, researchPoints = state.researchPoints + 3)
+                    } else state
+                } else {
+                    // Trade gems for RP
+                    if (state.gems >= 5) {
+                        state.copy(gems = state.gems - 5, researchPoints = state.researchPoints + 8)
+                    } else state
+                }
+            }
+            "anomaly" -> {
+                if (optionIndex == 0) {
+                    // Study: 1 hour of income
+                    val earned = state.creditsPerSecond * 3600
+                    state.copy(credits = state.credits + earned, totalCreditsEarned = state.totalCreditsEarned + earned)
+                } else {
+                    // Stabilize: star coins
+                    val coins = maxOf(1, state.starCoins / 10)
+                    state.copy(starCoins = state.starCoins + coins)
+                }
+            }
+            else -> state
+        }
+    }
+
     private fun getDayNumber(): Long {
         val cal = Calendar.getInstance()
         return cal.get(Calendar.YEAR) * 1000L + cal.get(Calendar.DAY_OF_YEAR)

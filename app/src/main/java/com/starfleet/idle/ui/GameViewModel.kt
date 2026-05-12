@@ -33,37 +33,152 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     val showDailyReward: StateFlow<Boolean> = _showDailyReward
 
     init {
-        // loadGame()
-        // startGameLoop()
+        loadGame()
+        startGameLoop()
     }
 
     private fun loadGame() {
-        // Disabled for debugging
+        val saved = repository.load()
+        if (saved != null) {
+            var newState = GameEngine.checkDailyLogin(saved)
+            val (afterOffline, earned) = GameEngine.calculateOfflineEarnings(newState)
+            newState = afterOffline
+            newState = GameEngine.checkAchievements(newState)
+            _state.value = newState
+
+            if (earned > 1.0) {
+                _offlineEarnings.value = earned
+            }
+            if (newState.dailyRewardsClaimed < newState.dailyLoginStreak) {
+                _showDailyReward.value = true
+            }
+        } else {
+            _state.value = GameEngine.checkDailyLogin(_state.value)
+            if (_state.value.dailyRewardsClaimed < _state.value.dailyLoginStreak) {
+                _showDailyReward.value = true
+            }
+        }
     }
 
     private fun startGameLoop() {
-        // Disabled for debugging
+        // Main game tick every 100ms
+        viewModelScope.launch {
+            while (true) {
+                delay(100)
+                _state.value = GameEngine.tick(_state.value)
+            }
+        }
+
+        // Achievement check every 5 seconds
+        viewModelScope.launch {
+            while (true) {
+                delay(5_000)
+                val before = _state.value.unlockedAchievements
+                _state.value = GameEngine.checkAchievements(_state.value)
+                val after = _state.value.unlockedAchievements
+                val newOnes = after - before
+                if (newOnes.isNotEmpty()) {
+                    _newAchievements.value = newOnes.toList()
+                }
+            }
+        }
+
+        // Auto-save every 30 seconds
+        viewModelScope.launch {
+            while (true) {
+                delay(30_000)
+                repository.save(_state.value)
+            }
+        }
     }
 
-    fun handleEncounter(optionIndex: Int) {}
-    fun dismissEncounter() {}
-    fun buyShip(tierId: String) {}
-    fun buyUpgrade(tierId: String, upgradeId: String) {}
-    fun buyShopBonus(bonusId: String) {}
-    fun buyResearch(nodeId: String) {}
-    fun buyPerk(perkId: String) {}
-    fun setBuyAmount(amount: BuyAmount) {}
-    fun switchSector(sectorId: String) {}
-    fun tap() {}
-    fun prestige() {}
-    fun activateAdBoost() {}
-    fun activateSpeedBoost() {}
-    fun doubleOfflineEarnings(earnings: Double) {}
-    fun claimDailyReward() {}
-    fun buyGemItem(itemId: String) {}
-    fun purchaseGemPack(packId: String) {}
-    fun dismissOfflineEarnings() {}
-    fun dismissNewAchievements() {}
-    fun hardReset() {}
-    fun saveGame() {}
+    fun handleEncounter(optionIndex: Int) {
+        val encounter = _randomEncounter.value ?: return
+        _state.value = GameEngine.handleEncounter(_state.value, encounter, optionIndex)
+        _randomEncounter.value = null
+    }
+
+    fun dismissEncounter() {
+        _randomEncounter.value = null
+    }
+
+    fun buyShip(tierId: String) {
+        _state.value = GameEngine.buyShips(_state.value, tierId, _state.value.buyAmount)
+    }
+
+    fun buyUpgrade(tierId: String, upgradeId: String) {
+        _state.value = GameEngine.buyUpgrade(_state.value, tierId, upgradeId)
+    }
+
+    fun buyShopBonus(bonusId: String) {
+        _state.value = GameEngine.buyShopBonus(_state.value, bonusId)
+    }
+
+    fun buyResearch(nodeId: String) {
+        _state.value = GameEngine.buyResearch(_state.value, nodeId)
+    }
+
+    fun buyPerk(perkId: String) {
+        _state.value = GameEngine.buyPerk(_state.value, perkId)
+    }
+
+    fun setBuyAmount(amount: BuyAmount) {
+        _state.value = GameEngine.setBuyAmount(_state.value, amount)
+    }
+
+    fun switchSector(sectorId: String) {
+        _state.value = GameEngine.switchSector(_state.value, sectorId)
+    }
+
+    fun tap() {
+        _state.value = GameEngine.tap(_state.value)
+    }
+
+    fun prestige() {
+        _state.value = GameEngine.prestige(_state.value)
+        repository.save(_state.value)
+    }
+
+    fun activateAdBoost() {
+        _state.value = GameEngine.activateAdBoost(_state.value)
+    }
+
+    fun activateSpeedBoost() {
+        _state.value = GameEngine.activateSpeedBoost(_state.value)
+    }
+
+    fun doubleOfflineEarnings(earnings: Double) {
+        _state.value = GameEngine.doubleOfflineEarnings(_state.value, earnings)
+        _offlineEarnings.value = null
+    }
+
+    fun claimDailyReward() {
+        _state.value = GameEngine.claimDailyReward(_state.value)
+        _showDailyReward.value = false
+    }
+
+    fun buyGemItem(itemId: String) {
+        _state.value = GameEngine.buyGemItem(_state.value, itemId)
+    }
+
+    fun purchaseGemPack(packId: String) {
+        _state.value = GameEngine.purchaseGemPack(_state.value, packId)
+    }
+
+    fun dismissOfflineEarnings() {
+        _offlineEarnings.value = null
+    }
+
+    fun dismissNewAchievements() {
+        _newAchievements.value = emptyList()
+    }
+
+    fun hardReset() {
+        repository.clear()
+        _state.value = GameState()
+    }
+
+    fun saveGame() {
+        repository.save(_state.value)
+    }
 }
