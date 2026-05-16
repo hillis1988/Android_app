@@ -67,9 +67,9 @@ object GameEngine {
         var newState = state.copy(credits = state.credits - totalCost, sectors = updatedSectors)
         newState = progressQuests(newState, QuestType.BUY_SHIPS, affordable.toLong())
         newState = progressQuests(newState, QuestType.SPEND_CREDITS, totalCost.toLong())
-        // Unlock-tier quest fires when the next ship in this sector becomes unlocked
+        // First time buying a ship of this tier counts toward "Unlock New Tier" quest
         if (currentShip.count == 0) {
-            // Already had this ship unlocked; check if a higher tier just became available
+            newState = progressQuests(newState, QuestType.UNLOCK_SHIP_TIER, 1L)
         }
         return newState
     }

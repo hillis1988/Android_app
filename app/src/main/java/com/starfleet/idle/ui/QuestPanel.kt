@@ -71,7 +71,7 @@ fun QuestPanel(state: GameState, onClaim: (Int) -> Unit) {
                             Text(text = template.name, color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                             Text(text = template.description, color = TextSecondary, fontSize = 10.sp)
                             LinearProgressIndicator(
-                                progress = { pct },
+                                progress = pct,
                                 modifier = Modifier.fillMaxWidth().height(4.dp),
                                 color = if (quest.completed) ShieldGreen else NebulaPurple,
                                 trackColor = DeepSpace
