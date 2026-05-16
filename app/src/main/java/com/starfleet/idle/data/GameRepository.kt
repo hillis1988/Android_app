@@ -8,7 +8,7 @@ import org.json.JSONObject
 class GameRepository(context: Context) {
 
     private val prefs: SharedPreferences =
-        context.getSharedPreferences("starfleet_idle_save_v3", Context.MODE_PRIVATE)
+        context.getSharedPreferences("starfleet_idle_save_v4", Context.MODE_PRIVATE)
 
     fun save(state: GameState) {
         val json = JSONObject().apply {
@@ -70,6 +70,20 @@ class GameRepository(context: Context) {
             val achieveArray = JSONArray()
             state.unlockedAchievements.forEach { achieveArray.put(it) }
             put("achievements", achieveArray)
+
+            // Quests
+            put("questsRefreshedAt", state.questsRefreshedAt)
+            put("seenTutorial", state.seenTutorial)
+            val questsArray = JSONArray()
+            state.activeQuests.forEach { q ->
+                questsArray.put(JSONObject().apply {
+                    put("templateId", q.templateId)
+                    put("progress", q.progress)
+                    put("completed", q.completed)
+                    put("claimed", q.claimed)
+                })
+            }
+            put("activeQuests", questsArray)
         }
 
         prefs.edit().putString("game_state", json.toString()).apply()
@@ -130,6 +144,23 @@ class GameRepository(context: Context) {
             val buyAmountStr = json.optString("buyAmount", "X1")
             val buyAmount = try { BuyAmount.valueOf(buyAmountStr) } catch (e: Exception) { BuyAmount.X1 }
 
+            // Active quests
+            val questsArray = json.optJSONArray("activeQuests")
+            val activeQuests = mutableListOf<ActiveQuest>()
+            if (questsArray != null) {
+                for (i in 0 until questsArray.length()) {
+                    val q = questsArray.getJSONObject(i)
+                    activeQuests.add(
+                        ActiveQuest(
+                            templateId = q.getString("templateId"),
+                            progress = q.optLong("progress", 0L),
+                            completed = q.optBoolean("completed", false),
+                            claimed = q.optBoolean("claimed", false)
+                        )
+                    )
+                }
+            }
+
             GameState(
                 credits = json.getDouble("credits"),
                 totalCreditsEarned = json.getDouble("totalCreditsEarned"),
@@ -152,6 +183,9 @@ class GameRepository(context: Context) {
                 adBoostEndTime = json.optLong("adBoostEndTime", 0L),
                 speedBoostEndTime = json.optLong("speedBoostEndTime", 0L),
                 buyAmount = buyAmount,
+                activeQuests = activeQuests,
+                questsRefreshedAt = json.optLong("questsRefreshedAt", 0L),
+                seenTutorial = json.optBoolean("seenTutorial", false),
                 lastTickTime = json.getLong("lastTickTime"),
                 gameStartTime = json.getLong("gameStartTime")
             )

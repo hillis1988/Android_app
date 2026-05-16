@@ -67,6 +67,23 @@ fun StatsBar(state: GameState, onGetGems: () -> Unit = {}) {
             Text("🎉 GALAXY CONQUERED! YOU WIN! 🎉", color = CreditGold, fontSize = 16.sp, fontWeight = FontWeight.Bold,
                 modifier = Modifier.align(Alignment.CenterHorizontally))
         }
+
+        // Ready-to-prestige indicator (shows when gain is meaningful)
+        if (state.coinsOnReset >= 5 && state.coinsOnReset >= state.starCoins / 4) {
+            Spacer(Modifier.height(4.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(CreditGold.copy(alpha = 0.15f), RoundedCornerShape(6.dp))
+                    .padding(vertical = 3.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "🪙 Ready to Prestige! +${state.coinsOnReset} Star Coins",
+                    color = CreditGold, fontSize = 11.sp, fontWeight = FontWeight.Bold
+                )
+            }
+        }
     }
 }
 

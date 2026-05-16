@@ -86,6 +86,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             val (afterOffline, earned) = GameEngine.calculateOfflineEarnings(newState)
             newState = afterOffline
             newState = GameEngine.checkAchievements(newState)
+            newState = GameEngine.refreshDailyQuestsIfNeeded(newState)
             _state.value = newState
 
             if (earned > 1.0) {
@@ -95,8 +96,10 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 _showDailyReward.value = true
             }
         } else {
-            _state.value = GameEngine.checkDailyLogin(_state.value)
-            if (_state.value.dailyRewardsClaimed < _state.value.dailyLoginStreak) {
+            var s = GameEngine.checkDailyLogin(_state.value)
+            s = GameEngine.refreshDailyQuestsIfNeeded(s)
+            _state.value = s
+            if (s.dailyRewardsClaimed < s.dailyLoginStreak) {
                 _showDailyReward.value = true
             }
         }
@@ -140,6 +143,33 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 submitLeaderboardScores()
             }
         }
+
+        // Random encounter check every 60 seconds
+        viewModelScope.launch {
+            while (true) {
+                delay(60_000)
+                if (_randomEncounter.value == null) {
+                    val encounter = GameEngine.maybeTriggerEncounter(_state.value)
+                    if (encounter != null) _randomEncounter.value = encounter
+                }
+            }
+        }
+
+        // Daily quest refresh check every 60 seconds (covers passing midnight)
+        viewModelScope.launch {
+            while (true) {
+                delay(60_000)
+                _state.value = GameEngine.refreshDailyQuestsIfNeeded(_state.value)
+            }
+        }
+    }
+
+    fun claimQuestReward(index: Int) {
+        _state.value = GameEngine.claimQuestReward(_state.value, index)
+    }
+
+    fun completeTutorial() {
+        _state.value = GameEngine.completeTutorial(_state.value)
     }
 
     fun handleEncounter(optionIndex: Int) {

@@ -34,6 +34,9 @@ data class GameState(
     val lastTapTime: Long = 0L,
     val totalTaps: Long = 0L,
     val totalCreditsFromTaps: Double = 0.0,
+    val activeQuests: List<ActiveQuest> = emptyList(),
+    val questsRefreshedAt: Long = 0L,
+    val seenTutorial: Boolean = false,
     val gameStartTime: Long = System.currentTimeMillis()
 ) {
     // --- Active sector helpers ---

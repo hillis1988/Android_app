@@ -263,6 +263,108 @@ fun GameScreen(viewModel: GameViewModel) {
         if (showCreditsDialog) {
             CreditsDialog(onDismiss = { showCreditsDialog = false })
         }
+
+        // Random encounter dialog
+        currentEncounter?.let { encounter ->
+            EncounterDialog(
+                encounter = encounter,
+                onChoose = { idx -> viewModel.handleEncounter(idx) },
+                onDismiss = { viewModel.dismissEncounter() }
+            )
+        }
+
+        // First-time tutorial
+        if (!state.seenTutorial) {
+            TutorialDialog(onDismiss = { viewModel.completeTutorial() })
+        }
+    }
+}
+
+@Composable
+private fun EncounterDialog(
+    encounter: com.starfleet.idle.data.EncounterData,
+    onChoose: (Int) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val ui = com.starfleet.idle.data.getEncounterUI(encounter.type)
+    Dialog(onDismissRequest = onDismiss) {
+        StarFleetIdleTheme {
+            Card(colors = CardDefaults.cardColors(containerColor = CardBackground), shape = RoundedCornerShape(16.dp)) {
+                Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(ui.emoji, fontSize = 40.sp)
+                    Spacer(Modifier.height(8.dp))
+                    Text(ui.title, color = CreditGold, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.height(8.dp))
+                    Text(ui.description, color = TextSecondary, fontSize = 13.sp, textAlign = TextAlign.Center)
+                    Spacer(Modifier.height(16.dp))
+                    ui.options.forEachIndexed { idx, opt ->
+                        Button(
+                            onClick = { onChoose(idx) },
+                            colors = ButtonDefaults.buttonColors(containerColor = NebulaPurple),
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+                        ) {
+                            Text(opt, fontSize = 13.sp)
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    TextButton(onClick = onDismiss) {
+                        Text("Skip", color = TextSecondary, fontSize = 11.sp)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TutorialDialog(onDismiss: () -> Unit) {
+    var step by remember { mutableIntStateOf(0) }
+    val steps = listOf(
+        Triple("⭐ Welcome, Commander!",
+            "You command a fleet of starships earning credits across the galaxy.",
+            "Tap a ship to buy more — they earn passively, even when you're offline."),
+        Triple("🌌 Explore Sectors",
+            "Build 10 ships of the highest tier in a sector to unlock the next.",
+            "Each new sector earns more — but costs more too. Choose your battles."),
+        Triple("🪙 Prestige & Quests",
+            "When progress slows, prestige to earn permanent Star Coins.",
+            "Complete daily quests for gems. Build the strongest fleet in the galaxy!")
+    )
+    Dialog(onDismissRequest = {}) {
+        StarFleetIdleTheme {
+            Card(colors = CardDefaults.cardColors(containerColor = CardBackground), shape = RoundedCornerShape(16.dp)) {
+                Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(steps[step].first, color = CreditGold, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.height(12.dp))
+                    Text(steps[step].second, color = TextPrimary, fontSize = 13.sp, textAlign = TextAlign.Center)
+                    Spacer(Modifier.height(8.dp))
+                    Text(steps[step].third, color = TextSecondary, fontSize = 12.sp, textAlign = TextAlign.Center)
+                    Spacer(Modifier.height(16.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        steps.indices.forEach { i ->
+                            Box(
+                                modifier = Modifier
+                                    .width(8.dp).height(8.dp)
+                                    .background(
+                                        if (i == step) CreditGold else TextSecondary.copy(alpha = 0.3f),
+                                        androidx.compose.foundation.shape.CircleShape
+                                    )
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(16.dp))
+                    Button(
+                        onClick = {
+                            if (step < steps.size - 1) step++ else onDismiss()
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = NebulaPurple),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(if (step < steps.size - 1) "Next" else "Let's Go!")
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -371,7 +473,10 @@ private fun SectorSelector(state: GameState, onSwitch: (String) -> Unit) {
                         "${sector.emoji} ${sector.name}"
                     } else {
                         val reqShip = SHIP_TIERS.find { it.id == sector.unlockShipId }
-                        "🔒 ${sector.unlockShipCount}x ${reqShip?.name ?: "???"}"
+                        val haveCount = if (reqShip != null) {
+                            state.sectors[reqShip.sectorId]?.ships?.get(reqShip.id)?.count ?: 0
+                        } else 0
+                        "🔒 $haveCount/${sector.unlockShipCount} ${reqShip?.name ?: "???"}"
                     }
                     Text(text = labelText, fontSize = 10.sp, maxLines = 1)
                 },
@@ -416,6 +521,13 @@ private fun FleetTab(viewModel: GameViewModel, state: GameState, onPrestige: () 
         }
 
         LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(vertical = 4.dp)) {
+            // Daily quests panel at top
+            if (state.activeQuests.isNotEmpty()) {
+                item {
+                    QuestPanel(state = state, onClaim = { idx -> viewModel.claimQuestReward(idx) })
+                }
+            }
+
             val activeShips = SHIP_TIERS.filter { it.sectorId == state.activeSectorId }
             items(activeShips) { tier ->
                 val shipState = state.activeShips[tier.id] ?: ShipState()

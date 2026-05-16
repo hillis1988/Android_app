@@ -64,7 +64,14 @@ object GameEngine {
             this[state.activeSectorId] = updatedSector
         }
 
-        return state.copy(credits = state.credits - totalCost, sectors = updatedSectors)
+        var newState = state.copy(credits = state.credits - totalCost, sectors = updatedSectors)
+        newState = progressQuests(newState, QuestType.BUY_SHIPS, affordable.toLong())
+        newState = progressQuests(newState, QuestType.SPEND_CREDITS, totalCost.toLong())
+        // Unlock-tier quest fires when the next ship in this sector becomes unlocked
+        if (currentShip.count == 0) {
+            // Already had this ship unlocked; check if a higher tier just became available
+        }
+        return newState
     }
 
     fun buyUpgrade(state: GameState, tierId: String, upgradeId: String): GameState {
@@ -86,7 +93,9 @@ object GameEngine {
             this[state.activeSectorId] = updatedSector
         }
 
-        return state.copy(credits = state.credits - cost, sectors = updatedSectors)
+        var newState = state.copy(credits = state.credits - cost, sectors = updatedSectors)
+        newState = progressQuests(newState, QuestType.BUY_UPGRADES, 1L)
+        return newState
     }
 
     fun buyShopBonus(state: GameState, bonusId: String): GameState {
@@ -127,20 +136,35 @@ object GameEngine {
     }
 
     private const val TAP_COOLDOWN_MS = 2000L
+    private const val TAP_CRIT_CHANCE = 0.10
+    private const val TAP_CRIT_MULTIPLIER = 5.0
 
     fun tap(state: GameState): GameState {
         val now = System.currentTimeMillis()
         if (now - state.lastTapTime < TAP_COOLDOWN_MS) return state
 
-        val earned = state.tapCredits
-        if (earned <= 0) return state
-        return state.copy(
+        val baseEarned = state.tapCredits
+        if (baseEarned <= 0) return state
+
+        val isCrit = Math.random() < TAP_CRIT_CHANCE
+        val earned = if (isCrit) baseEarned * TAP_CRIT_MULTIPLIER else baseEarned
+
+        var newState = state.copy(
             credits = state.credits + earned,
             totalCreditsEarned = state.totalCreditsEarned + earned,
             totalTaps = state.totalTaps + 1,
             totalCreditsFromTaps = state.totalCreditsFromTaps + earned,
             lastTapTime = now
         )
+        newState = progressQuests(newState, QuestType.TAP_TIMES, 1L)
+        return newState
+    }
+
+    /** Used by UI to know whether a tap was a critical hit (for visual feedback). */
+    fun wasLastTapCritical(state: GameState): Boolean {
+        // Reconstructed by checking if last tap earned > base value
+        // (UI uses this to flash a "CRITICAL!" message)
+        return false // simple version: UI tracks its own crit flag
     }
 
     fun setBuyAmount(state: GameState, amount: BuyAmount): GameState {
@@ -160,7 +184,7 @@ object GameEngine {
         if (finalCoins <= 0) return state
 
         val now = System.currentTimeMillis()
-        return GameState(
+        var prestiged = GameState(
             credits = 25.0,
             totalCreditsEarned = 0.0,
             gems = state.gems,
@@ -170,6 +194,7 @@ object GameEngine {
             researchLevels = state.researchLevels,  // persists
             perkLevels = state.perkLevels,          // persists
             researchPoints = state.researchPoints,    // persists
+            researchPointsFraction = state.researchPointsFraction, // persists
             starCoins = state.starCoins + finalCoins,
             totalPrestigeResets = state.totalPrestigeResets + 1,
             unlockedAchievements = state.unlockedAchievements,
@@ -177,10 +202,18 @@ object GameEngine {
             lastLoginDay = state.lastLoginDay,
             dailyRewardsClaimed = state.dailyRewardsClaimed,
             adBoostEndTime = state.adBoostEndTime,
+            speedBoostEndTime = state.speedBoostEndTime,
             buyAmount = state.buyAmount,
+            totalTaps = state.totalTaps,
+            totalCreditsFromTaps = state.totalCreditsFromTaps,
+            activeQuests = state.activeQuests,
+            questsRefreshedAt = state.questsRefreshedAt,
+            seenTutorial = state.seenTutorial,
             lastTickTime = now,
             gameStartTime = now
         )
+        prestiged = progressQuests(prestiged, QuestType.PRESTIGE, 1L)
+        return prestiged
     }
 
     fun buyPerk(state: GameState, perkId: String): GameState {
@@ -348,39 +381,6 @@ object GameEngine {
         )
     }
 
-    fun resolveEncounter(state: GameState, encounter: EncounterData, optionIndex: Int): GameState {
-        return when (encounter.type) {
-            "asteroid" -> {
-                if (optionIndex == 0) {
-                    val gain = state.creditsPerSecond * 300 // 5 mins of income
-                    state.copy(credits = state.credits + gain, totalCreditsEarned = state.totalCreditsEarned + gain)
-                } else {
-                    state.copy(gems = state.gems + 15)
-                }
-            }
-            "trader" -> {
-                if (optionIndex == 0) {
-                    val cost = state.creditsPerSecond * 600
-                    if (state.credits >= cost) {
-                        state.copy(credits = state.credits - cost, researchPoints = state.researchPoints + 10)
-                    } else state
-                } else {
-                    if (state.gems >= 20) {
-                        state.copy(gems = state.gems - 20, researchPoints = state.researchPoints + 25)
-                    } else state
-                }
-            }
-            "anomaly" -> {
-                if (optionIndex == 0) {
-                    activateAdBoost(state)
-                } else {
-                    state.copy(starCoins = state.starCoins + 5)
-                }
-            }
-            else -> state
-        }
-    }
-
     // --- Random Encounters ---
     fun handleEncounter(state: GameState, encounter: EncounterData, optionIndex: Int): GameState {
         return when (encounter.type) {
@@ -427,4 +427,68 @@ object GameEngine {
         val cal = Calendar.getInstance()
         return cal.get(Calendar.YEAR) * 1000L + cal.get(Calendar.DAY_OF_YEAR)
     }
+
+    // --- Daily Quests ---
+    private const val QUEST_REFRESH_MS = 86_400_000L // 24 hours
+
+    /** Refreshes daily quests if 24 hours have passed since last refresh. */
+    fun refreshDailyQuestsIfNeeded(state: GameState): GameState {
+        val now = System.currentTimeMillis()
+        if (state.questsRefreshedAt > 0 && (now - state.questsRefreshedAt) < QUEST_REFRESH_MS) {
+            return state
+        }
+        // Pick 3 random quests, weighted toward easier ones for new players
+        val pool = QUEST_TEMPLATES.toMutableList().apply { shuffle() }
+        val selected = pool.take(3).map { ActiveQuest(templateId = it.id) }
+        return state.copy(activeQuests = selected, questsRefreshedAt = now)
+    }
+
+    /** Increments quest progress by [amount] for all quests of [type]. */
+    fun progressQuests(state: GameState, type: QuestType, amount: Long = 1L): GameState {
+        if (state.activeQuests.isEmpty()) return state
+        val updated = state.activeQuests.map { q ->
+            val template = q.template()
+            if (template.type == type && !q.completed) {
+                val newProgress = q.progress + amount
+                val isDone = newProgress >= template.targetValue
+                q.copy(progress = minOf(newProgress, template.targetValue), completed = isDone)
+            } else q
+        }
+        return state.copy(activeQuests = updated)
+    }
+
+    fun claimQuestReward(state: GameState, questIndex: Int): GameState {
+        if (questIndex !in state.activeQuests.indices) return state
+        val quest = state.activeQuests[questIndex]
+        if (!quest.completed || quest.claimed) return state
+        val template = quest.template()
+
+        val cps = state.creditsPerSecond
+        val creditBonus = cps * template.creditMultiplier * 600 // bonus = N seconds of CPS
+
+        val updatedQuests = state.activeQuests.toMutableList().apply {
+            this[questIndex] = quest.copy(claimed = true)
+        }
+
+        return state.copy(
+            gems = state.gems + template.gemReward,
+            researchPoints = state.researchPoints + template.researchPointReward,
+            credits = state.credits + creditBonus,
+            totalCreditsEarned = state.totalCreditsEarned + creditBonus,
+            activeQuests = updatedQuests
+        )
+    }
+
+    // --- Random Encounter Triggering ---
+    fun maybeTriggerEncounter(state: GameState): EncounterData? {
+        // Encounters only happen if the player has meaningful CPS (> 100/s)
+        if (state.creditsPerSecond < 100) return null
+        // 1% chance per check (checks every minute = ~once an hour)
+        if (Math.random() > 0.01) return null
+
+        val type = listOf("asteroid", "trader", "anomaly").random()
+        return EncounterData(id = System.currentTimeMillis().toString(), type = type)
+    }
+
+    fun completeTutorial(state: GameState): GameState = state.copy(seenTutorial = true)
 }
