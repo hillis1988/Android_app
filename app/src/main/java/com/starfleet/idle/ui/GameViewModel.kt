@@ -41,8 +41,23 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     /** Called by BillingManager when a purchase is verified by Google Play. */
     fun grantGemsFromPurchase(productId: String) {
-        _state.value = GameEngine.grantGemPack(_state.value, productId)
+        // Route the purchase to the right grant function based on product type
+        val state = _state.value
+        _state.value = if (com.starfleet.idle.data.DEVELOPER_TIPS.any { it.id == productId }) {
+            GameEngine.grantTip(state, productId)
+        } else {
+            GameEngine.grantGemPack(state, productId)
+        }
         repository.save(_state.value)
+    }
+
+    fun purchaseTip(tipId: String) {
+        if (com.starfleet.idle.data.DEV_MODE_FREE_GEMS) {
+            _state.value = GameEngine.grantTip(_state.value, tipId)
+            repository.save(_state.value)
+        } else {
+            purchaseLauncher?.invoke(tipId)
+        }
     }
 
     // Leaderboard integration

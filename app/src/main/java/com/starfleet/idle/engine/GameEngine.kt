@@ -349,6 +349,12 @@ object GameEngine {
     @Deprecated("Use grantGemPack instead", ReplaceWith("grantGemPack(state, packId)"))
     fun purchaseGemPack(state: GameState, packId: String): GameState = grantGemPack(state, packId)
 
+    /** Called when a developer tip purchase is verified. Gives the gem bonus. */
+    fun grantTip(state: GameState, tipId: String): GameState {
+        val tip = DEVELOPER_TIPS.firstOrNull { it.id == tipId } ?: return state
+        return state.copy(gems = state.gems + tip.gemBonus)
+    }
+
     // --- Double offline earnings (ad reward) ---
     fun doubleOfflineEarnings(state: GameState, earnings: Double): GameState {
         return state.copy(

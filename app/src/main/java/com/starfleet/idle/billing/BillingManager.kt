@@ -71,12 +71,19 @@ class BillingManager(
     }
 
     private fun queryProducts() {
-        val productList = GEM_PACKS.map { pack ->
+        val gemProducts = GEM_PACKS.map { pack ->
             QueryProductDetailsParams.Product.newBuilder()
                 .setProductId(pack.id)
                 .setProductType(BillingClient.ProductType.INAPP)
                 .build()
         }
+        val tipProducts = com.starfleet.idle.data.DEVELOPER_TIPS.map { tip ->
+            QueryProductDetailsParams.Product.newBuilder()
+                .setProductId(tip.id)
+                .setProductType(BillingClient.ProductType.INAPP)
+                .build()
+        }
+        val productList = gemProducts + tipProducts
 
         val params = QueryProductDetailsParams.newBuilder()
             .setProductList(productList)

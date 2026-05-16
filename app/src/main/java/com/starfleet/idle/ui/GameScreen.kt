@@ -261,7 +261,10 @@ fun GameScreen(viewModel: GameViewModel) {
 
         // Credits dialog
         if (showCreditsDialog) {
-            CreditsDialog(onDismiss = { showCreditsDialog = false })
+            CreditsDialog(
+                onDismiss = { showCreditsDialog = false },
+                onTip = { viewModel.purchaseTip("tip_developers") }
+            )
         }
 
         // Random encounter dialog
@@ -369,7 +372,7 @@ private fun TutorialDialog(onDismiss: () -> Unit) {
 }
 
 @Composable
-private fun CreditsDialog(onDismiss: () -> Unit) {
+private fun CreditsDialog(onDismiss: () -> Unit, onTip: () -> Unit) {
     val context = androidx.compose.ui.platform.LocalContext.current
     Dialog(onDismissRequest = onDismiss) {
         StarFleetIdleTheme {
@@ -385,7 +388,7 @@ private fun CreditsDialog(onDismiss: () -> Unit) {
                     Spacer(Modifier.height(16.dp))
 
                     Text("StarFleet Idle", color = TextPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                    Text("v1.0", color = TextSecondary, fontSize = 12.sp)
+                    Text("v1.1.0", color = TextSecondary, fontSize = 12.sp)
 
                     Spacer(Modifier.height(16.dp))
                     Divider(color = DeepSpace, thickness = 1.dp)
@@ -400,24 +403,21 @@ private fun CreditsDialog(onDismiss: () -> Unit) {
 
                     Spacer(Modifier.height(16.dp))
 
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Button(
-                            onClick = { /* In-app purchase logic here later */ },
-                            colors = ButtonDefaults.buttonColors(containerColor = NebulaPurple),
-                            shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text("☕ Buy Abbie a Frappe (£5)", fontSize = 11.sp, textAlign = TextAlign.Center)
-                        }
-                        Button(
-                            onClick = { /* In-app purchase logic here later */ },
-                            colors = ButtonDefaults.buttonColors(containerColor = StarBlue),
-                            shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text("🍺 Buy Roy a Pint (£5)", fontSize = 11.sp, textAlign = TextAlign.Center)
-                        }
+                    // Single tip button — buying tips Abbie & Roy together
+                    Button(
+                        onClick = onTip,
+                        colors = ButtonDefaults.buttonColors(containerColor = NebulaPurple),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("☕🍺 Tip Abbie & Roy (£5)", fontSize = 13.sp, fontWeight = FontWeight.Bold)
                     }
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        "Includes 100 bonus gems as a thank-you!",
+                        color = TextSecondary, fontSize = 10.sp,
+                        textAlign = TextAlign.Center
+                    )
 
                     Spacer(Modifier.height(16.dp))
 
