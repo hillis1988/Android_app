@@ -89,7 +89,7 @@ fun GameScreen(viewModel: GameViewModel) {
         // --- Dialogs ---
 
         // Offline earnings with double option
-        /* offlineEarnings?.let { earned ->
+        offlineEarnings?.let { earned ->
             Dialog(onDismissRequest = { viewModel.dismissOfflineEarnings() }) {
                 StarFleetIdleTheme {
                     Card(colors = CardDefaults.cardColors(containerColor = CardBackground), shape = RoundedCornerShape(16.dp)) {
@@ -105,7 +105,7 @@ fun GameScreen(viewModel: GameViewModel) {
                                     colors = ButtonDefaults.buttonColors(containerColor = DeepSpace)) {
                                     Text("Collect")
                                 }
-                                Button(onClick = { viewModel.doubleOfflineEarnings(earned) },
+                                Button(onClick = { viewModel.watchAdToDoubleOffline(earned) },
                                     colors = ButtonDefaults.buttonColors(containerColor = NebulaPurple)) {
                                     Text("📺 Double It!")
                                 }
@@ -116,7 +116,7 @@ fun GameScreen(viewModel: GameViewModel) {
                     }
                 }
             }
-        } */
+        }
 
         // Daily reward
         if (showDailyReward) {
@@ -162,38 +162,6 @@ fun GameScreen(viewModel: GameViewModel) {
                             Button(onClick = { viewModel.dismissNewAchievements() },
                                 colors = ButtonDefaults.buttonColors(containerColor = NebulaPurple)) {
                                 Text("Nice!")
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // Space Encounter popup
-        currentEncounter?.let { data ->
-            val ui = getEncounterUI(data.type)
-            Dialog(onDismissRequest = { viewModel.dismissEncounter() }) {
-                StarFleetIdleTheme {
-                    Card(colors = CardDefaults.cardColors(containerColor = CardBackground), shape = RoundedCornerShape(16.dp)) {
-                        Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(ui.emoji, fontSize = 48.sp)
-                            Spacer(Modifier.height(8.dp))
-                            Text(ui.title, color = CreditGold, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                            Spacer(Modifier.height(12.dp))
-                            Text(ui.description, color = TextPrimary, fontSize = 14.sp, textAlign = TextAlign.Center)
-                            Spacer(Modifier.height(20.dp))
-                            ui.options.forEachIndexed { index, option ->
-                                Button(
-                                    onClick = { viewModel.handleEncounter(index) },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    colors = ButtonDefaults.buttonColors(containerColor = DeepSpace)
-                                ) {
-                                    Text(option)
-                                }
-                                Spacer(Modifier.height(8.dp))
-                            }
-                            TextButton(onClick = { viewModel.dismissEncounter() }) {
-                                Text("Ignore", color = TextSecondary)
                             }
                         }
                     }
@@ -388,7 +356,7 @@ private fun CreditsDialog(onDismiss: () -> Unit, onTip: () -> Unit) {
                     Spacer(Modifier.height(16.dp))
 
                     Text("StarFleet Idle", color = TextPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                    Text("v1.1.0", color = TextSecondary, fontSize = 12.sp)
+                    Text("v1.2.1", color = TextSecondary, fontSize = 12.sp)
 
                     Spacer(Modifier.height(16.dp))
                     Divider(color = DeepSpace, thickness = 1.dp)

@@ -12,8 +12,8 @@ android {
         applicationId = "uk.co.royhillis.starfleetidle"
         minSdk = 26
         targetSdk = 35
-        versionCode = 9
-        versionName = "1.1.1"
+        versionCode = 12
+        versionName = "1.2.2"
     }
 
     buildFeatures {
@@ -48,5 +48,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
     implementation("com.android.billingclient:billing-ktx:7.0.0")
     implementation("com.google.android.gms:play-services-games-v2:20.1.2")
+    implementation("com.google.android.gms:play-services-ads:23.6.0")
+    implementation("com.google.android.ump:user-messaging-platform:3.0.0")
     debugImplementation("androidx.compose.ui:ui-tooling")
 }

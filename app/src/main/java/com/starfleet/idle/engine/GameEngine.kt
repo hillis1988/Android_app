@@ -184,12 +184,24 @@ object GameEngine {
         if (finalCoins <= 0) return state
 
         val now = System.currentTimeMillis()
+        // Apply Wormhole Mastery perk: start with bonus credits and 5 free Probes
+        val hasWormholeMastery = (state.perkLevels["wormhole_mastery"] ?: 0) > 0
+        val startingCredits = if (hasWormholeMastery) 10_000.0 else 25.0
+        val freshSectors = SECTORS.associate { sector ->
+            sector.id to if (hasWormholeMastery && sector.id == "solar") {
+                SectorState(
+                    ships = SHIP_TIERS.associate { tier ->
+                        tier.id to if (tier.id == "probe") ShipState(count = 5) else ShipState()
+                    }
+                )
+            } else SectorState()
+        }
         var prestiged = GameState(
-            credits = 25.0,
+            credits = startingCredits,
             totalCreditsEarned = 0.0,
             gems = state.gems,
             gemBonusIncome = state.gemBonusIncome,
-            sectors = SECTORS.associate { it.id to SectorState() },
+            sectors = freshSectors,
             activeSectorId = "solar",
             researchLevels = state.researchLevels,  // persists
             perkLevels = state.perkLevels,          // persists
@@ -210,7 +222,7 @@ object GameEngine {
             questsRefreshedAt = state.questsRefreshedAt,
             seenTutorial = state.seenTutorial,
             lastTickTime = now,
-            gameStartTime = now
+            gameStartTime = state.gameStartTime  // preserve original — used for playtime stat
         )
         prestiged = progressQuests(prestiged, QuestType.PRESTIGE, 1L)
         return prestiged
@@ -430,8 +442,8 @@ object GameEngine {
     }
 
     private fun getDayNumber(): Long {
-        val cal = Calendar.getInstance()
-        return cal.get(Calendar.YEAR) * 1000L + cal.get(Calendar.DAY_OF_YEAR)
+        // Days since epoch — contiguous across year boundaries
+        return System.currentTimeMillis() / 86_400_000L
     }
 
     // --- Daily Quests ---

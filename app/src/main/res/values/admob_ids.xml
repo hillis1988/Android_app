@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        Google AdMob configuration for StarFleet Idle.
+    -->
+    <string name="admob_app_id">ca-app-pub-6711164365136588~6884407581</string>
+
+    <!--
+        Rewarded ad unit IDs.
+        Income boost = real ad unit (created in AdMob).
+        Speed boost = currently uses the same unit; you can create a separate one
+        and replace this if you want different ads for each boost.
+    -->
+    <string name="admob_rewarded_income_boost">ca-app-pub-6711164365136588/4281078422</string>
+    <string name="admob_rewarded_speed_boost">ca-app-pub-6711164365136588/2519348560</string>
+</resources>

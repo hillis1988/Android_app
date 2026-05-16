@@ -30,6 +30,7 @@ class GameRepository(context: Context) {
             put("speedBoostEndTime", state.speedBoostEndTime)
             put("buyAmount", state.buyAmount.name)
             put("lastTickTime", state.lastTickTime)
+            put("lastTapTime", state.lastTapTime)
             put("gameStartTime", state.gameStartTime)
 
             // Sectors
@@ -187,6 +188,7 @@ class GameRepository(context: Context) {
                 questsRefreshedAt = json.optLong("questsRefreshedAt", 0L),
                 seenTutorial = json.optBoolean("seenTutorial", false),
                 lastTickTime = json.getLong("lastTickTime"),
+                lastTapTime = json.optLong("lastTapTime", 0L),
                 gameStartTime = json.getLong("gameStartTime")
             )
         } catch (e: Exception) {

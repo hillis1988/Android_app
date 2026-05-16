@@ -11,7 +11,7 @@ data class Perk(
 
 val STAR_COIN_PERKS = listOf(
     Perk("autopilot_2", "Auto-Pilot MK II", "🤖", "Increase max offline time to 24 hours.", 50),
-    Perk("wormhole_mastery", "Wormhole Mastery", "🌀", "Start with Scout and Corvette unlocked.", 100),
+    Perk("wormhole_mastery", "Wormhole Mastery", "🌀", "Start each prestige with 10K credits + 5 free Probes.", 100),
     Perk("gem_finder", "Gem Prospector", "💎", "+10% chance for extra Gems from achievements.", 250),
     Perk("speed_docking", "Speed Docking", "⚓", "Ship costs reduced by 10% permanently.", 500)
 )

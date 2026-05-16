@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.ViewModelProvider
+import com.starfleet.idle.ads.AdManager
 import com.starfleet.idle.billing.BillingManager
 import com.starfleet.idle.leaderboard.LeaderboardManager
 import com.starfleet.idle.ui.GameScreen
@@ -16,6 +17,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var viewModel: GameViewModel
     private lateinit var billingManager: BillingManager
     private lateinit var leaderboardManager: LeaderboardManager
+    private lateinit var adManager: AdManager
 
     private val leaderboardLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -48,6 +50,17 @@ class MainActivity : ComponentActivity() {
             leaderboardLauncher.launch(intent)
         }
 
+        // AdMob setup — gather consent first, then initialize
+        adManager = AdManager(this)
+        val consentManager = com.starfleet.idle.ads.ConsentManager(this)
+        consentManager.gatherConsent {
+            adManager.initialize()
+        }
+
+        viewModel.setAdShower { adType, onReward ->
+            adManager.showAd(this, adType, onReward)
+        }
+
         setContent {
             StarFleetIdleTheme {
                 GameScreen(viewModel = viewModel)
@@ -57,8 +70,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        // Per Play Games Services v2 docs: re-check auth state on resume
-        // because it can change while the activity is inactive.
         if (::leaderboardManager.isInitialized) {
             leaderboardManager.checkSignInOnResume()
         }

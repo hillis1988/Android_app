@@ -38,7 +38,7 @@ val QUEST_TEMPLATES = listOf(
     QuestTemplate("buy_50", "Mass Production", "Buy 50 ships of any kind", "🏭", 50L, 15, type = QuestType.BUY_SHIPS),
     QuestTemplate("upgrade_10", "Engineer's Special", "Buy 10 upgrades", "🔧", 10L, 12, type = QuestType.BUY_UPGRADES),
     QuestTemplate("tap_30", "Persistent", "Tap the bonus button 30 times", "👆", 30L, 10, type = QuestType.TAP_TIMES),
-    QuestTemplate("research_1", "Lab Work", "Buy 1 research upgrade", "🔬", 1L, 10, researchPointReward = 5, type = QuestType.BUY_UPGRADES),
+    QuestTemplate("research_1", "Lab Work", "Buy 1 ship upgrade", "🔬", 1L, 10, researchPointReward = 5, type = QuestType.BUY_UPGRADES),
 
     // Hard quests (reward: 20-30 gems + RP)
     QuestTemplate("prestige", "Reset for Glory", "Prestige your fleet", "🪙", 1L, 25, researchPointReward = 10, type = QuestType.PRESTIGE),
