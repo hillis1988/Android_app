@@ -45,6 +45,35 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         repository.save(_state.value)
     }
 
+    // Leaderboard integration
+    private var leaderboardManager: com.starfleet.idle.leaderboard.LeaderboardManager? = null
+    private var leaderboardLauncher: ((android.content.Intent) -> Unit)? = null
+
+    fun setLeaderboardManager(manager: com.starfleet.idle.leaderboard.LeaderboardManager) {
+        leaderboardManager = manager
+    }
+
+    fun setLeaderboardLauncher(launcher: (android.content.Intent) -> Unit) {
+        leaderboardLauncher = launcher
+    }
+
+    fun showLeaderboards() {
+        leaderboardManager?.showAllLeaderboards { intent ->
+            leaderboardLauncher?.invoke(intent)
+        }
+    }
+
+    private fun submitLeaderboardScores() {
+        val mgr = leaderboardManager ?: return
+        val s = _state.value
+        mgr.submitFleetPower(s.totalFleetPower.toLong())
+        mgr.submitTotalCredits(s.totalCreditsEarned.toLong())
+        mgr.submitPrestigeResets(s.totalPrestigeResets.toLong())
+        mgr.submitStarCoins(s.starCoins.toLong())
+        val dysons = s.sectors["void"]?.ships?.get("dyson")?.count?.toLong() ?: 0L
+        mgr.submitDysonSpheres(dysons)
+    }
+
     init {
         loadGame()
         startGameLoop()
@@ -103,6 +132,14 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 repository.save(_state.value)
             }
         }
+
+        // Submit leaderboard scores every 60 seconds
+        viewModelScope.launch {
+            while (true) {
+                delay(60_000)
+                submitLeaderboardScores()
+            }
+        }
     }
 
     fun handleEncounter(optionIndex: Int) {
@@ -150,6 +187,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     fun prestige() {
         _state.value = GameEngine.prestige(_state.value)
         repository.save(_state.value)
+        submitLeaderboardScores()
     }
 
     fun activateAdBoost() {

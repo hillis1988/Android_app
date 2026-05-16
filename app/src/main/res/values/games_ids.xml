@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        Play Games Services configuration.
+
+        STEP 1: Get your Game Services project ID:
+        Play Console → Grow → Play Games Services → Setup and management → Configuration
+        It's a 12-digit number, e.g. "123456789012"
+
+        Replace 000000000000 with your actual project ID below.
+    -->
+    <string translatable="false" name="game_services_project_id">135609527557</string>
+
+    <!--
+        STEP 2: Create 5 leaderboards in Play Console:
+        Play Games Services → Leaderboards → Create leaderboard
+
+        After creating each, copy the Leaderboard ID (looks like "CgkI...")
+        and paste it as the value below, replacing the REPLACE_WITH placeholder.
+    -->
+    <string translatable="false" name="leaderboard_fleet_power">REPLACE_WITH_FLEET_POWER_LEADERBOARD_ID</string>
+    <string translatable="false" name="leaderboard_total_credits">REPLACE_WITH_TOTAL_CREDITS_LEADERBOARD_ID</string>
+    <string translatable="false" name="leaderboard_prestige_resets">REPLACE_WITH_PRESTIGE_LEADERBOARD_ID</string>
+    <string translatable="false" name="leaderboard_star_coins">REPLACE_WITH_STAR_COINS_LEADERBOARD_ID</string>
+    <string translatable="false" name="leaderboard_dyson_spheres">REPLACE_WITH_DYSON_LEADERBOARD_ID</string>
+</resources>

@@ -3,8 +3,10 @@ package com.starfleet.idle
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.ViewModelProvider
 import com.starfleet.idle.billing.BillingManager
+import com.starfleet.idle.leaderboard.LeaderboardManager
 import com.starfleet.idle.ui.GameScreen
 import com.starfleet.idle.ui.GameViewModel
 import com.starfleet.idle.ui.theme.StarFleetIdleTheme
@@ -13,13 +15,18 @@ class MainActivity : ComponentActivity() {
 
     private lateinit var viewModel: GameViewModel
     private lateinit var billingManager: BillingManager
+    private lateinit var leaderboardManager: LeaderboardManager
+
+    private val leaderboardLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { /* result is ignored — Play Games handles its own UI */ }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         viewModel = ViewModelProvider(this)[GameViewModel::class.java]
 
-        // Wire billing: when a purchase is verified, grant gems via ViewModel
+        // Billing setup
         billingManager = BillingManager(
             context = this,
             onPurchaseVerified = { productId ->
@@ -28,15 +35,32 @@ class MainActivity : ComponentActivity() {
         )
         billingManager.connect()
 
-        // Inject billing launch into the ViewModel
         viewModel.setPurchaseLauncher { productId ->
             billingManager.launchPurchase(this, productId)
+        }
+
+        // Leaderboards setup
+        leaderboardManager = LeaderboardManager(this)
+        leaderboardManager.initialize()
+
+        viewModel.setLeaderboardManager(leaderboardManager)
+        viewModel.setLeaderboardLauncher { intent ->
+            leaderboardLauncher.launch(intent)
         }
 
         setContent {
             StarFleetIdleTheme {
                 GameScreen(viewModel = viewModel)
             }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Per Play Games Services v2 docs: re-check auth state on resume
+        // because it can change while the activity is inactive.
+        if (::leaderboardManager.isInitialized) {
+            leaderboardManager.checkSignInOnResume()
         }
     }
 

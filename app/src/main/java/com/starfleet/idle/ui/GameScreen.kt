@@ -439,6 +439,12 @@ private fun FleetTab(viewModel: GameViewModel, state: GameState, onPrestige: () 
                 }
                 Spacer(Modifier.height(8.dp))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                    TextButton(onClick = { viewModel.showLeaderboards() }) {
+                        Text("🏆 Leaderboards", color = CreditGold, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+                Spacer(Modifier.height(4.dp))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
                     TextButton(onClick = onHardReset) { Text("Hard Reset (erase all)", color = AlertRed, fontSize = 11.sp) }
                 }
                 Spacer(Modifier.height(4.dp))
