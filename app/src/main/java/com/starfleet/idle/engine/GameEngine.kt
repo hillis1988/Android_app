@@ -509,4 +509,7 @@ object GameEngine {
     }
 
     fun completeTutorial(state: GameState): GameState = state.copy(seenTutorial = true)
+
+    fun setHideWelcomeMessage(state: GameState, hide: Boolean): GameState =
+        state.copy(hideWelcomeMessage = hide)
 }

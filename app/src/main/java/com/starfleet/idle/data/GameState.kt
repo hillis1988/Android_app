@@ -37,6 +37,7 @@ data class GameState(
     val activeQuests: List<ActiveQuest> = emptyList(),
     val questsRefreshedAt: Long = 0L,
     val seenTutorial: Boolean = false,
+    val hideWelcomeMessage: Boolean = false,
     val gameStartTime: Long = System.currentTimeMillis()
 ) {
     // --- Active sector helpers ---

@@ -75,6 +75,7 @@ class GameRepository(context: Context) {
             // Quests
             put("questsRefreshedAt", state.questsRefreshedAt)
             put("seenTutorial", state.seenTutorial)
+            put("hideWelcomeMessage", state.hideWelcomeMessage)
             val questsArray = JSONArray()
             state.activeQuests.forEach { q ->
                 questsArray.put(JSONObject().apply {
@@ -187,6 +188,7 @@ class GameRepository(context: Context) {
                 activeQuests = activeQuests,
                 questsRefreshedAt = json.optLong("questsRefreshedAt", 0L),
                 seenTutorial = json.optBoolean("seenTutorial", false),
+                hideWelcomeMessage = json.optBoolean("hideWelcomeMessage", false),
                 lastTickTime = json.getLong("lastTickTime"),
                 lastTapTime = json.optLong("lastTapTime", 0L),
                 gameStartTime = json.getLong("gameStartTime")

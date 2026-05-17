@@ -32,6 +32,8 @@ fun GameScreen(viewModel: GameViewModel) {
     var showPrestigeDialog by remember { mutableStateOf(false) }
     var showHardResetDialog by remember { mutableStateOf(false) }
     var showCreditsDialog by remember { mutableStateOf(false) }
+    // Welcome dialog: shows on launch unless user has opted out, dismissible per session
+    var showWelcomeDialog by remember { mutableStateOf(!state.hideWelcomeMessage) }
 
     val tabs = listOf("🚀 Fleet", "💎 Premium", "🏪 Shop", "🔬 Research", "✨ Perks", "📊 Stats")
 
@@ -247,6 +249,95 @@ fun GameScreen(viewModel: GameViewModel) {
         // First-time tutorial
         if (!state.seenTutorial) {
             TutorialDialog(onDismiss = { viewModel.completeTutorial() })
+        }
+
+        // Welcome / thank you dialog (shown on launch unless opted out)
+        if (showWelcomeDialog && state.seenTutorial) {
+            WelcomeDialog(
+                initialHide = state.hideWelcomeMessage,
+                onDismiss = { dontShowAgain ->
+                    if (dontShowAgain) viewModel.setHideWelcomeMessage(true)
+                    showWelcomeDialog = false
+                }
+            )
+        }
+    }
+}
+
+@Composable
+private fun WelcomeDialog(initialHide: Boolean, onDismiss: (Boolean) -> Unit) {
+    var dontShowAgain by remember { mutableStateOf(initialHide) }
+    Dialog(onDismissRequest = { onDismiss(dontShowAgain) }) {
+        StarFleetIdleTheme {
+            Card(colors = CardDefaults.cardColors(containerColor = CardBackground), shape = RoundedCornerShape(16.dp)) {
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text("⭐", fontSize = 36.sp)
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        "A Word From the Devs",
+                        color = CreditGold, fontSize = 18.sp, fontWeight = FontWeight.Bold
+                    )
+                    Spacer(Modifier.height(16.dp))
+                    Text(
+                        "StarFleet Idle was built as a learning project by a father and daughter team — Roy & Abbie Hillis.",
+                        color = TextPrimary, fontSize = 13.sp,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        "What started as a tinkering session evolved into the game you're playing now. Every line of code, every ship, every sector — built together.",
+                        color = TextSecondary, fontSize = 12.sp,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    Text(
+                        "Thank you for downloading and playing. It genuinely means a lot.",
+                        color = ShieldGreen, fontSize = 13.sp, fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        "— Roy & Abbie",
+                        color = CreditGold, fontSize = 13.sp, fontWeight = FontWeight.Bold
+                    )
+
+                    Spacer(Modifier.height(20.dp))
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { dontShowAgain = !dontShowAgain }
+                    ) {
+                        Checkbox(
+                            checked = dontShowAgain,
+                            onCheckedChange = { dontShowAgain = it },
+                            colors = CheckboxDefaults.colors(
+                                checkedColor = NebulaPurple,
+                                uncheckedColor = TextSecondary,
+                                checkmarkColor = TextPrimary
+                            )
+                        )
+                        Text(
+                            "Don't show this again",
+                            color = TextSecondary, fontSize = 12.sp
+                        )
+                    }
+
+                    Spacer(Modifier.height(12.dp))
+
+                    Button(
+                        onClick = { onDismiss(dontShowAgain) },
+                        colors = ButtonDefaults.buttonColors(containerColor = NebulaPurple),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("OK")
+                    }
+                }
+            }
         }
     }
 }

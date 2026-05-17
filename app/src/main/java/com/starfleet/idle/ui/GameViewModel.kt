@@ -194,6 +194,11 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         _state.value = GameEngine.completeTutorial(_state.value)
     }
 
+    fun setHideWelcomeMessage(hide: Boolean) {
+        _state.value = GameEngine.setHideWelcomeMessage(_state.value, hide)
+        repository.save(_state.value)
+    }
+
     fun handleEncounter(optionIndex: Int) {
         val encounter = _randomEncounter.value ?: return
         _state.value = GameEngine.handleEncounter(_state.value, encounter, optionIndex)
