@@ -34,6 +34,8 @@ fun GameScreen(viewModel: GameViewModel) {
     var showCreditsDialog by remember { mutableStateOf(false) }
     // Welcome dialog: shows on launch unless user has opted out, dismissible per session
     var showWelcomeDialog by remember { mutableStateOf(!state.hideWelcomeMessage) }
+    // Quest panel expanded state — lifted to GameScreen so it survives tab switches
+    var questsExpanded by remember { mutableStateOf(true) }
 
     val tabs = listOf("🚀 Fleet", "💎 Premium", "🏪 Shop", "🔬 Research", "✨ Perks", "📊 Stats")
 
@@ -77,7 +79,15 @@ fun GameScreen(viewModel: GameViewModel) {
                     }
 
                     when (selectedTab) {
-                        0 -> FleetTab(viewModel, state, { showPrestigeDialog = true }, { showHardResetDialog = true }, { showCreditsDialog = true })
+                        0 -> FleetTab(
+                            viewModel = viewModel,
+                            state = state,
+                            questsExpanded = questsExpanded,
+                            onToggleQuestsExpanded = { questsExpanded = !questsExpanded },
+                            onPrestige = { showPrestigeDialog = true },
+                            onHardReset = { showHardResetDialog = true },
+                            onCredits = { showCreditsDialog = true }
+                        )
                         1 -> PremiumScreen(state, { viewModel.activateAdBoost() }, { viewModel.activateSpeedBoost() }, { viewModel.buyGemItem(it) }, { viewModel.purchaseGemPack(it) })
                         2 -> ShopScreen(state, { viewModel.buyShopBonus(it) }, { viewModel.tap() })
                         3 -> ResearchScreen(state) { viewModel.buyResearch(it) }
@@ -551,7 +561,15 @@ private fun SectorSelector(state: GameState, onSwitch: (String) -> Unit) {
 }
 
 @Composable
-private fun FleetTab(viewModel: GameViewModel, state: GameState, onPrestige: () -> Unit, onHardReset: () -> Unit, onCredits: () -> Unit) {
+private fun FleetTab(
+    viewModel: GameViewModel,
+    state: GameState,
+    questsExpanded: Boolean,
+    onToggleQuestsExpanded: () -> Unit,
+    onPrestige: () -> Unit,
+    onHardReset: () -> Unit,
+    onCredits: () -> Unit
+) {
     Column(modifier = Modifier.fillMaxSize()) {
         BuyAmountSelector(selected = state.buyAmount, onSelect = { viewModel.setBuyAmount(it) })
 
@@ -583,7 +601,12 @@ private fun FleetTab(viewModel: GameViewModel, state: GameState, onPrestige: () 
             // Daily quests panel at top
             if (state.activeQuests.isNotEmpty()) {
                 item {
-                    QuestPanel(state = state, onClaim = { idx -> viewModel.claimQuestReward(idx) })
+                    QuestPanel(
+                        state = state,
+                        expanded = questsExpanded,
+                        onToggleExpanded = onToggleQuestsExpanded,
+                        onClaim = { idx -> viewModel.claimQuestReward(idx) }
+                    )
                 }
             }
 
