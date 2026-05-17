@@ -152,18 +152,17 @@ data class GameState(
             return 0.4 + (level * 0.05) // 5% per level (was 8%)
         }
 
-    // Tap gives a FLAT amount based on total credits earned (not CPS).
-    // This prevents autoclickers from being useful — even at 100 taps/sec,
-    // the total is capped and scales very slowly.
+    // Tap gives a meaningful chunk of CPS, but with a 2-second cooldown enforced
+    // in GameEngine.tap() — autoclickers can't beat the cooldown so this is safe to buff.
     val tapCredits: Double
         get() {
             val level = activeShopLevels["command_bridge"] ?: 0
             if (level == 0) return 0.0
-            // Gives 0.1% of CPS per tap, with a hard cap of 2 seconds of income per tap
-            // At max level 5: 0.5% of CPS per tap = 0.005 * CPS
-            // Even at 20 taps/sec that's only 0.1 * CPS = 10% boost, not game-breaking
-            val perTap = creditsPerSecond * 0.001 * level
-            val cap = creditsPerSecond * 2.0 // max 2 seconds of income per tap
+            // 5% of CPS per level — at max level 5 = 25% of CPS per tap
+            // With 2-second cooldown: max 12.5% CPS/sec from tapping = mild boost, not abusable
+            val perTap = creditsPerSecond * 0.05 * level
+            // Cap at 30 seconds of income per tap (caps the boost from 5x crits too)
+            val cap = creditsPerSecond * 30.0
             return minOf(maxOf(1.0, perTap), cap)
         }
 

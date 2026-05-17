@@ -15,7 +15,8 @@ import com.starfleet.idle.ui.theme.*
 
 @Composable
 fun QuestPanel(state: GameState, onClaim: (Int) -> Unit) {
-    var expanded by remember { mutableStateOf(true) }
+    // rememberSaveable so the hide/show preference survives tab switches and config changes
+    var expanded by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(true) }
     val anyAvailable = state.activeQuests.any { it.completed && !it.claimed }
     val total = state.activeQuests.size
     val completed = state.activeQuests.count { it.completed }
