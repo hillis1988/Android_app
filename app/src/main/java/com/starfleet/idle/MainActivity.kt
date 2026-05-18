@@ -57,8 +57,8 @@ class MainActivity : ComponentActivity() {
             adManager.initialize()
         }
 
-        viewModel.setAdShower { adType, onReward ->
-            adManager.showAd(this, adType, onReward)
+        viewModel.setAdShower { adType, onReward, onUnavailable ->
+            adManager.showAd(this, adType, onReward, onUnavailable)
         }
 
         setContent {

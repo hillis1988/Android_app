@@ -73,10 +73,18 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     // AdMob integration — shower is a callback into MainActivity that hands off to AdManager
-    private var adShower: ((com.starfleet.idle.ads.AdManager.AdType, () -> Unit) -> Unit)? = null
+    // shower(adType, onReward, onUnavailable)
+    private var adShower: ((com.starfleet.idle.ads.AdManager.AdType, () -> Unit, () -> Unit) -> Unit)? = null
 
-    fun setAdShower(shower: (com.starfleet.idle.ads.AdManager.AdType, () -> Unit) -> Unit) {
+    fun setAdShower(shower: (com.starfleet.idle.ads.AdManager.AdType, () -> Unit, () -> Unit) -> Unit) {
         adShower = shower
+    }
+
+    private val _adUnavailable = MutableStateFlow(false)
+    val adUnavailable: StateFlow<Boolean> = _adUnavailable
+
+    fun dismissAdUnavailable() {
+        _adUnavailable.value = false
     }
 
     fun showLeaderboards() {
@@ -251,14 +259,14 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun activateAdBoost() {
-        // Show a rewarded ad. The boost is only granted on full ad completion.
         val shower = adShower
         if (shower != null) {
-            shower(com.starfleet.idle.ads.AdManager.AdType.INCOME_BOOST) {
-                _state.value = GameEngine.activateAdBoost(_state.value)
-            }
+            shower(
+                com.starfleet.idle.ads.AdManager.AdType.INCOME_BOOST,
+                { _state.value = GameEngine.activateAdBoost(_state.value) },
+                { _state.value = GameEngine.activateAdBoost(_state.value) } // grant anyway if ad unavailable
+            )
         } else {
-            // Fallback if AdMob isn't initialised yet (e.g. just opened the app)
             _state.value = GameEngine.activateAdBoost(_state.value)
         }
     }
@@ -266,9 +274,11 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     fun activateSpeedBoost() {
         val shower = adShower
         if (shower != null) {
-            shower(com.starfleet.idle.ads.AdManager.AdType.SPEED_BOOST) {
-                _state.value = GameEngine.activateSpeedBoost(_state.value)
-            }
+            shower(
+                com.starfleet.idle.ads.AdManager.AdType.SPEED_BOOST,
+                { _state.value = GameEngine.activateSpeedBoost(_state.value) },
+                { _state.value = GameEngine.activateSpeedBoost(_state.value) }
+            )
         } else {
             _state.value = GameEngine.activateSpeedBoost(_state.value)
         }
@@ -278,10 +288,17 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     fun watchAdToDoubleOffline(earnings: Double) {
         val shower = adShower
         if (shower != null) {
-            shower(com.starfleet.idle.ads.AdManager.AdType.INCOME_BOOST) {
-                _state.value = GameEngine.doubleOfflineEarnings(_state.value, earnings)
-                _offlineEarnings.value = null
-            }
+            shower(
+                com.starfleet.idle.ads.AdManager.AdType.DOUBLE_BOOST,
+                {
+                    _state.value = GameEngine.doubleOfflineEarnings(_state.value, earnings)
+                    _offlineEarnings.value = null
+                },
+                {
+                    _state.value = GameEngine.doubleOfflineEarnings(_state.value, earnings)
+                    _offlineEarnings.value = null
+                }
+            )
         } else {
             _state.value = GameEngine.doubleOfflineEarnings(_state.value, earnings)
             _offlineEarnings.value = null

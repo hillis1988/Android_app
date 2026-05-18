@@ -2,15 +2,29 @@
 <resources>
     <!--
         Google AdMob configuration for StarFleet Idle.
+
+        ⚠️ TESTING MODE: Using Google's official test ad unit IDs below.
+        These always serve test ads and are safe to click without risk of fraud.
+
+        When ready for production, swap the active/commented lines below.
     -->
+
+    <!-- TEST App ID (for development): -->
+    <string name="admob_app_id">ca-app-pub-3940256099942544~3347511713</string>
+    <!-- REAL App ID (for production):
     <string name="admob_app_id">ca-app-pub-6711164365136588~6884407581</string>
+    -->
+
+    <!-- TEST AD UNIT IDs (safe to click, always serve demo ads): -->
+    <string name="admob_rewarded_income_boost">ca-app-pub-3940256099942544/5224354917</string>
+    <string name="admob_rewarded_speed_boost">ca-app-pub-3940256099942544/5224354917</string>
+    <string name="admob_rewarded_double_boost">ca-app-pub-3940256099942544/5224354917</string>
 
     <!--
-        Rewarded ad unit IDs.
-        Income boost = real ad unit (created in AdMob).
-        Speed boost = currently uses the same unit; you can create a separate one
-        and replace this if you want different ads for each boost.
+        REAL AD UNIT IDs (for production — uncomment these and comment out the test ones above):
+
+        <string name="admob_rewarded_income_boost">ca-app-pub-6711164365136588/4281078422</string>
+        <string name="admob_rewarded_speed_boost">ca-app-pub-6711164365136588/7251634556</string>
+        <string name="admob_rewarded_double_boost">ca-app-pub-6711164365136588/9138423625</string>
     -->
-    <string name="admob_rewarded_income_boost">ca-app-pub-6711164365136588/4281078422</string>
-    <string name="admob_rewarded_speed_boost">ca-app-pub-6711164365136588/2519348560</string>
 </resources>
