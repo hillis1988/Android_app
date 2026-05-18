@@ -14,6 +14,20 @@ android {
         targetSdk = 35
         versionCode = 20
         versionName = "1.3.0"
+        ndk {
+            debugSymbolLevel = "FULL"
+        }
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
     }
 
     buildFeatures {
