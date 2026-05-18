@@ -52,12 +52,13 @@ object GameEngine {
 
         val currentShip = state.activeShips[tierId] ?: ShipState()
         val requested = getBuyCount(amount, currentShip.count)
-        val affordable = state.getAffordableCount(tierId, requested)
-        if (affordable == 0) return state
 
-        val totalCost = state.getBulkShipCost(tierId, affordable)
+        // Only buy if the player can afford the FULL requested amount
+        val totalCost = state.getBulkShipCost(tierId, requested)
+        if (state.credits < totalCost) return state
+
         val updatedShips = state.activeShips.toMutableMap().apply {
-            this[tierId] = currentShip.copy(count = currentShip.count + affordable)
+            this[tierId] = currentShip.copy(count = currentShip.count + requested)
         }
         val updatedSector = state.activeSectorState.copy(ships = updatedShips)
         val updatedSectors = state.sectors.toMutableMap().apply {
@@ -65,7 +66,7 @@ object GameEngine {
         }
 
         var newState = state.copy(credits = state.credits - totalCost, sectors = updatedSectors)
-        newState = progressQuests(newState, QuestType.BUY_SHIPS, affordable.toLong())
+        newState = progressQuests(newState, QuestType.BUY_SHIPS, requested.toLong())
         newState = progressQuests(newState, QuestType.SPEND_CREDITS, totalCost.toLong())
         // First time buying a ship of this tier counts toward "Unlock New Tier" quest
         if (currentShip.count == 0) {
