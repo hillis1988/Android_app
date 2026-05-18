@@ -22,7 +22,8 @@ fun PremiumScreen(
     onWatchAd: () -> Unit,
     onWatchSpeedAd: () -> Unit,
     onBuyGemItem: (String) -> Unit,
-    onPurchaseGemPack: (String) -> Unit
+    onPurchaseGemPack: (String) -> Unit,
+    getLocalisedPrice: (String) -> String? = { null }
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize().background(SpaceBlack),
@@ -147,7 +148,11 @@ fun PremiumScreen(
         }
 
         items(GEM_PACKS) { pack ->
-            GemPackCard(pack = pack, onBuy = { onPurchaseGemPack(pack.id) })
+            GemPackCard(
+                pack = pack,
+                localisedPrice = getLocalisedPrice(pack.id),
+                onBuy = { onPurchaseGemPack(pack.id) }
+            )
         }
 
         // Achievements summary
@@ -220,7 +225,7 @@ private fun GemStoreCard(item: GemStoreItem, gameState: GameState, onBuy: () -> 
 }
 
 @Composable
-private fun GemPackCard(pack: GemPack, onBuy: () -> Unit) {
+private fun GemPackCard(pack: GemPack, localisedPrice: String?, onBuy: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 3.dp),
         colors = CardDefaults.cardColors(
@@ -249,8 +254,14 @@ private fun GemPackCard(pack: GemPack, onBuy: () -> Unit) {
                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
                 shape = RoundedCornerShape(8.dp)
             ) {
+                // Use localised price from Google Play (includes tax), fall back to hardcoded
+                val displayPrice = when {
+                    DEV_MODE_FREE_GEMS -> "FREE"
+                    localisedPrice != null -> localisedPrice
+                    else -> pack.priceDisplay
+                }
                 Text(
-                    text = if (DEV_MODE_FREE_GEMS) "FREE" else pack.priceDisplay,
+                    text = displayPrice,
                     fontSize = 12.sp, fontWeight = FontWeight.Bold
                 )
             }

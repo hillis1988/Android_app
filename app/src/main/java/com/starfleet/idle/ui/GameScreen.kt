@@ -88,7 +88,14 @@ fun GameScreen(viewModel: GameViewModel) {
                             onHardReset = { showHardResetDialog = true },
                             onCredits = { showCreditsDialog = true }
                         )
-                        1 -> PremiumScreen(state, { viewModel.activateAdBoost() }, { viewModel.activateSpeedBoost() }, { viewModel.buyGemItem(it) }, { viewModel.purchaseGemPack(it) })
+                        1 -> PremiumScreen(
+                            gameState = state,
+                            onWatchAd = { viewModel.activateAdBoost() },
+                            onWatchSpeedAd = { viewModel.activateSpeedBoost() },
+                            onBuyGemItem = { viewModel.buyGemItem(it) },
+                            onPurchaseGemPack = { viewModel.purchaseGemPack(it) },
+                            getLocalisedPrice = { viewModel.getLocalisedPrice(it) }
+                        )
                         2 -> ShopScreen(state, { viewModel.buyShopBonus(it) }, { viewModel.tap() })
                         3 -> ResearchScreen(state) { viewModel.buyResearch(it) }
                         4 -> PerkScreen(state) { viewModel.buyPerk(it) }

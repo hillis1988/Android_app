@@ -314,28 +314,28 @@ val GEM_PACKS = listOf(
     GemPack(
         id = "pack_tiny", name = "Handful of Gems", emoji = "💎",
         gems = 50, bonusGems = 0,
-        priceDisplay = "£0.99", priceValue = 0.99
+        priceDisplay = "£0.49", priceValue = 0.49
     ),
     GemPack(
         id = "pack_small", name = "Pouch of Gems", emoji = "💎",
         gems = 150, bonusGems = 15,
-        priceDisplay = "£1.99", priceValue = 1.99
+        priceDisplay = "£0.99", priceValue = 0.99
     ),
     GemPack(
         id = "pack_medium", name = "Chest of Gems", emoji = "💎💎",
         gems = 500, bonusGems = 75,
-        priceDisplay = "£4.99", priceValue = 4.99,
+        priceDisplay = "£2.49", priceValue = 2.49,
         isBestValue = true
     ),
     GemPack(
         id = "pack_large", name = "Vault of Gems", emoji = "💎💎💎",
         gems = 1200, bonusGems = 250,
-        priceDisplay = "£9.99", priceValue = 9.99
+        priceDisplay = "£4.99", priceValue = 4.99
     ),
     GemPack(
         id = "pack_mega", name = "Galaxy Hoard", emoji = "🌟💎🌟",
         gems = 3000, bonusGems = 800,
-        priceDisplay = "£19.99", priceValue = 19.99
+        priceDisplay = "£9.99", priceValue = 9.99
     )
 )
 

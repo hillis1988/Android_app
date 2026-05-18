@@ -31,7 +31,7 @@ fun ShipPanel(
 
     val buyCount = getBuyCount(gameState.buyAmount, shipState.count)
     val bulkCost = gameState.getBulkShipCost(tier.id, buyCount)
-    val canAfford = isUnlocked && gameState.credits >= gameState.getShipCost(tier.id)
+    val canAfford = isUnlocked && gameState.credits >= bulkCost
 
     Card(
         modifier = Modifier

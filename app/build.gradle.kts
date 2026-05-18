@@ -12,8 +12,8 @@ android {
         applicationId = "uk.co.royhillis.starfleetidle"
         minSdk = 26
         targetSdk = 35
-        versionCode = 18
-        versionName = "1.2.8"
+        versionCode = 20
+        versionName = "1.3.0"
     }
 
     buildFeatures {

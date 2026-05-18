@@ -41,6 +41,11 @@ class MainActivity : ComponentActivity() {
             billingManager.launchPurchase(this, productId)
         }
 
+        viewModel.setPriceLookup { productId ->
+            val details = billingManager.productDetails.value[productId]
+            details?.oneTimePurchaseOfferDetails?.formattedPrice
+        }
+
         // Leaderboards setup
         leaderboardManager = LeaderboardManager(this)
         leaderboardManager.initialize()

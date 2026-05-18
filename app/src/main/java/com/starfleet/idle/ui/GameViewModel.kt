@@ -34,10 +34,19 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     // Callback injected from MainActivity to launch Google Play Billing
     private var purchaseLauncher: ((String) -> Unit)? = null
+    // Callback to get localised price from BillingManager
+    private var priceLookup: ((String) -> String?)? = null
 
     fun setPurchaseLauncher(launcher: (String) -> Unit) {
         purchaseLauncher = launcher
     }
+
+    fun setPriceLookup(lookup: (String) -> String?) {
+        priceLookup = lookup
+    }
+
+    /** Returns the localised price string from Google Play, or null if not loaded yet. */
+    fun getLocalisedPrice(productId: String): String? = priceLookup?.invoke(productId)
 
     /** Called by BillingManager when a purchase is verified by Google Play. */
     fun grantGemsFromPurchase(productId: String) {
