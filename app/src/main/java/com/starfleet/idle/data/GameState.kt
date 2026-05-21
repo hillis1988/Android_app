@@ -38,7 +38,16 @@ data class GameState(
     val questsRefreshedAt: Long = 0L,
     val seenTutorial: Boolean = false,
     val hideWelcomeMessage: Boolean = false,
-    val gameStartTime: Long = System.currentTimeMillis()
+    val gameStartTime: Long = System.currentTimeMillis(),
+    // Fleet Missions
+    val missionBoards: Map<String, MissionBoardState> = emptyMap(),
+    val activeMissions: List<ActiveMission> = emptyList(),
+    val completedMissions: List<MissionResult> = emptyList(),  // pending collection
+    val missionHistory: List<MissionHistoryEntry> = emptyList(),  // last 20
+    val missionBonusIncomeEndTime: Long = 0L,
+    val missionBonusFleetPowerEndTime: Long = 0L,
+    val missionBonusResearchEndTime: Long = 0L,
+    val seenMissionTutorial: Boolean = false
 ) {
     // --- Active sector helpers ---
     val activeSector: Sector get() = SECTORS.first { it.id == activeSectorId }
@@ -93,7 +102,8 @@ data class GameState(
             state.count * tier.basePower * milestoneMulti
         }
         val shopPowerMult = 1.0 + ((sectorState.shopLevels["shield_array"] ?: 0) * 0.15)
-        return rawSectorPower * shopPowerMult * sector.incomeMultiplier * researchFleetPowerMultiplier
+        val missionBonusFleetPowerMult = if (missionBonusFleetPowerEndTime > System.currentTimeMillis()) 1.2 else 1.0
+        return rawSectorPower * shopPowerMult * sector.incomeMultiplier * researchFleetPowerMultiplier * missionBonusFleetPowerMult
     }
 
     val fleetPower: Double get() = getSectorPower(activeSectorId)
@@ -173,7 +183,8 @@ data class GameState(
             val darkMatterLevel = researchLevels["dark_matter"] ?: 0
             val baseMult = 1.0 + (darkMatterLevel * 0.15)
             val specialtyMult = if (activeSector.specialty == SectorSpecialty.RESEARCH_BOOST) 1.25 else 1.0
-            return (totalFleetPower / 10_000.0) * baseMult * specialtyMult / 3600.0
+            val missionBonusResearchMult = if (missionBonusResearchEndTime > System.currentTimeMillis()) 1.3 else 1.0
+            return (totalFleetPower / 10_000.0) * baseMult * specialtyMult * missionBonusResearchMult / 3600.0
         }
 
     // --- Income across all sectors (no unlock check — just skip empty sectors) ---
@@ -206,7 +217,8 @@ data class GameState(
                 totalIncome += sectorIncome * shopIncomeMult
             }
 
-            return totalIncome * prestigeMultiplier * researchIncomeMultiplier * adBoostMultiplier * speedMultiplier * (1.0 + gemBonusIncome)
+            val missionBonusIncomeMult = if (missionBonusIncomeEndTime > System.currentTimeMillis()) 1.2 else 1.0
+            return totalIncome * prestigeMultiplier * researchIncomeMultiplier * adBoostMultiplier * speedMultiplier * (1.0 + gemBonusIncome) * missionBonusIncomeMult
         }
 
     // --- Ship costs (active sector) ---
@@ -283,4 +295,19 @@ data class GameState(
     val isGameComplete: Boolean
         get() = unlockedSectorCount >= SECTORS.size &&
             (sectors["void"]?.ships?.get("dyson")?.count ?: 0) >= 3
+
+    // --- Fleet Mission helpers ---
+    val missionSlotCount: Int
+        get() = when {
+            totalFleetPower >= 1_000_000_000.0 -> 3
+            totalFleetPower >= 50_000_000.0 -> 2
+            totalFleetPower >= 500_000.0 -> 1
+            else -> 0
+        }
+
+    val activeMissionCount: Int
+        get() = activeMissions.count { it.status == MissionStatus.IN_PROGRESS }
+
+    val isMissionFeatureUnlocked: Boolean
+        get() = totalFleetPower >= 500_000.0
 }

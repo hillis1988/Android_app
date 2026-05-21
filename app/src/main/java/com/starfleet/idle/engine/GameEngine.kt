@@ -184,6 +184,9 @@ object GameEngine {
         
         if (finalCoins <= 0) return state
 
+        // Cancel all active missions and return ships before prestige reset
+        val stateAfterMissionCancel = MissionEngine.cancelAllMissions(state)
+
         val now = System.currentTimeMillis()
         // Apply Wormhole Mastery perk: start with bonus credits and 5 free Probes
         val hasWormholeMastery = (state.perkLevels["wormhole_mastery"] ?: 0) > 0
@@ -223,7 +226,13 @@ object GameEngine {
             questsRefreshedAt = state.questsRefreshedAt,
             seenTutorial = state.seenTutorial,
             lastTickTime = now,
-            gameStartTime = state.gameStartTime  // preserve original — used for playtime stat
+            gameStartTime = state.gameStartTime,  // preserve original — used for playtime stat
+            // Fleet Missions: history and bonus timers persist, boards/active missions cleared
+            missionHistory = stateAfterMissionCancel.missionHistory,
+            missionBonusIncomeEndTime = state.missionBonusIncomeEndTime,
+            missionBonusFleetPowerEndTime = state.missionBonusFleetPowerEndTime,
+            missionBonusResearchEndTime = state.missionBonusResearchEndTime,
+            seenMissionTutorial = state.seenMissionTutorial
         )
         prestiged = progressQuests(prestiged, QuestType.PRESTIGE, 1L)
         return prestiged

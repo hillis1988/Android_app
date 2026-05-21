@@ -24,7 +24,8 @@ enum class QuestType {
     PRESTIGE,            // Prestige once
     UNLOCK_SHIP_TIER,    // Unlock a new ship tier
     SUBMIT_LEADERBOARD,  // Submit any score (auto-completes)
-    SPEND_CREDITS        // Spend N credits
+    SPEND_CREDITS,       // Spend N credits
+    COMPLETE_MISSION     // Complete N fleet missions successfully
 }
 
 val QUEST_TEMPLATES = listOf(
@@ -43,7 +44,12 @@ val QUEST_TEMPLATES = listOf(
     // Hard quests (reward: 20-30 gems + RP)
     QuestTemplate("prestige", "Reset for Glory", "Prestige your fleet", "🪙", 1L, 25, researchPointReward = 10, type = QuestType.PRESTIGE),
     QuestTemplate("unlock_tier", "New Vessel", "Unlock a new ship tier", "⚡", 1L, 15, type = QuestType.UNLOCK_SHIP_TIER),
-    QuestTemplate("buy_100", "Mass Mobilization", "Buy 100 ships of any kind", "🌟", 100L, 25, type = QuestType.BUY_SHIPS)
+    QuestTemplate("buy_100", "Mass Mobilization", "Buy 100 ships of any kind", "🌟", 100L, 25, type = QuestType.BUY_SHIPS),
+
+    // Fleet mission quests
+    QuestTemplate("mission_1", "Fleet Commander", "Complete 1 fleet mission", "🎯", 1L, 10, type = QuestType.COMPLETE_MISSION),
+    QuestTemplate("mission_2", "Mission Specialist", "Complete 2 fleet missions", "🎯", 2L, 15, type = QuestType.COMPLETE_MISSION),
+    QuestTemplate("mission_3", "Admiral's Orders", "Complete 3 fleet missions", "🎯", 3L, 25, researchPointReward = 5, type = QuestType.COMPLETE_MISSION)
 )
 
 data class ActiveQuest(

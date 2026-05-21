@@ -7,7 +7,10 @@ import com.starfleet.idle.data.BuyAmount
 import com.starfleet.idle.data.EncounterData
 import com.starfleet.idle.data.GameRepository
 import com.starfleet.idle.data.GameState
+import com.starfleet.idle.data.MissionBoardState
+import com.starfleet.idle.data.MissionTemplate
 import com.starfleet.idle.engine.GameEngine
+import com.starfleet.idle.engine.MissionEngine
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -124,6 +127,8 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             var newState = GameEngine.checkDailyLogin(saved)
             val (afterOffline, earned) = GameEngine.calculateOfflineEarnings(newState)
             newState = afterOffline
+            // Check for missions that completed while offline
+            newState = MissionEngine.checkMissionCompletions(newState)
             newState = GameEngine.checkAchievements(newState)
             newState = GameEngine.refreshDailyQuestsIfNeeded(newState)
             _state.value = newState
@@ -199,6 +204,26 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             while (true) {
                 delay(60_000)
                 _state.value = GameEngine.refreshDailyQuestsIfNeeded(_state.value)
+            }
+        }
+
+        // Mission completion check every 10 seconds
+        viewModelScope.launch {
+            while (true) {
+                delay(10_000)
+                if (_state.value.activeMissions.isNotEmpty()) {
+                    _state.value = MissionEngine.checkMissionCompletions(_state.value)
+                }
+            }
+        }
+
+        // Mission board refresh check every 60 seconds
+        viewModelScope.launch {
+            while (true) {
+                delay(60_000)
+                if (MissionEngine.isFeatureUnlocked(_state.value)) {
+                    refreshMissionBoard()
+                }
             }
         }
     }
@@ -350,6 +375,48 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     fun hardReset() {
         repository.clear()
         _state.value = GameState()
+    }
+
+    // --- Fleet Mission lifecycle methods ---
+
+    fun deployMission(missionTemplate: MissionTemplate, selectedTiers: List<String>) {
+        val validation = MissionEngine.validateDeployment(missionTemplate, selectedTiers, _state.value)
+        if (validation.isValid) {
+            _state.value = MissionEngine.deployMission(_state.value, missionTemplate, selectedTiers)
+            saveGame()
+        }
+    }
+
+    fun collectMissionReward(missionId: String) {
+        _state.value = MissionEngine.collectMissionReward(_state.value, missionId)
+        saveGame()
+    }
+
+    fun refreshMissionBoard() {
+        val state = _state.value
+        val sectorId = state.activeSectorId
+        val board = state.missionBoards[sectorId] ?: MissionBoardState()
+        val now = System.currentTimeMillis()
+
+        if (MissionEngine.shouldRefreshBoard(board.lastRefreshTime, now)) {
+            val newMissions = MissionEngine.generateMissionBoard(
+                sectorId = sectorId,
+                activeMissions = state.activeMissions,
+                currentBoardMissions = board.missions,
+                seed = now,
+                cooldowns = board.cooldowns
+            )
+            val updatedBoard = board.copy(missions = newMissions, lastRefreshTime = now)
+            _state.value = state.copy(
+                missionBoards = state.missionBoards + (sectorId to updatedBoard)
+            )
+            saveGame()
+        }
+    }
+
+    fun dismissMissionTutorial() {
+        _state.value = _state.value.copy(seenMissionTutorial = true)
+        saveGame()
     }
 
     fun saveGame() {

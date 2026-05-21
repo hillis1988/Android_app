@@ -6,17 +6,21 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.starfleet.idle.data.*
+import com.starfleet.idle.engine.MissionEngine
 import com.starfleet.idle.ui.theme.*
 import androidx.compose.animation.core.tween
 
@@ -36,15 +40,45 @@ fun GameScreen(viewModel: GameViewModel) {
     var showWelcomeDialog by remember { mutableStateOf(!state.hideWelcomeMessage) }
     // Quest panel expanded state — lifted to GameScreen so it survives tab switches
     var questsExpanded by remember { mutableStateOf(true) }
+    // Fleet Missions navigation state
+    var showMissionBoard by remember { mutableStateOf(false) }
+    var selectedMissionForDetail by remember { mutableStateOf<MissionTemplate?>(null) }
 
     val tabs = listOf("🚀 Fleet", "💎 Premium", "🏪 Shop", "🔬 Research", "✨ Perks", "📊 Stats")
 
     Box(modifier = Modifier.fillMaxSize().background(SpaceBlack)) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            StatsBar(state = state, onGetGems = { selectedTab = 1 })
+        // Navigation: show Mission Board or main game screen
+        if (showMissionBoard) {
+            MissionBoardScreen(
+                gameState = state,
+                onMissionSelected = { mission -> selectedMissionForDetail = mission },
+                onCollectReward = { missionId -> viewModel.collectMissionReward(missionId) },
+                onBack = { showMissionBoard = false }
+            )
 
-            // Sector selector
-            SectorSelector(state = state, onSwitch = { viewModel.switchSector(it) })
+            // Mission tutorial overlay (shown on first access)
+            if (!state.seenMissionTutorial) {
+                MissionTutorialDialog(onDismiss = { viewModel.dismissMissionTutorial() })
+            }
+
+            // Mission detail dialog
+            selectedMissionForDetail?.let { mission ->
+                MissionDetailDialog(
+                    mission = mission,
+                    gameState = state,
+                    onDeploy = { template, tiers ->
+                        viewModel.deployMission(template, tiers)
+                        selectedMissionForDetail = null
+                    },
+                    onDismiss = { selectedMissionForDetail = null }
+                )
+            }
+        } else {
+            Column(modifier = Modifier.fillMaxSize()) {
+                StatsBar(state = state, onGetGems = { selectedTab = 1 })
+
+                // Sector selector
+                SectorSelector(state = state, onSwitch = { viewModel.switchSector(it) })
 
             ScrollableTabRow(
                 selectedTabIndex = selectedTab,
@@ -86,7 +120,8 @@ fun GameScreen(viewModel: GameViewModel) {
                             onToggleQuestsExpanded = { questsExpanded = !questsExpanded },
                             onPrestige = { showPrestigeDialog = true },
                             onHardReset = { showHardResetDialog = true },
-                            onCredits = { showCreditsDialog = true }
+                            onCredits = { showCreditsDialog = true },
+                            onMissions = { showMissionBoard = true }
                         )
                         1 -> PremiumScreen(
                             gameState = state,
@@ -103,7 +138,8 @@ fun GameScreen(viewModel: GameViewModel) {
                     }
                 }
             // }
-        }
+            }
+        } // end else (main game screen)
 
         // --- Dialogs ---
 
@@ -575,7 +611,8 @@ private fun FleetTab(
     onToggleQuestsExpanded: () -> Unit,
     onPrestige: () -> Unit,
     onHardReset: () -> Unit,
-    onCredits: () -> Unit
+    onCredits: () -> Unit,
+    onMissions: () -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         BuyAmountSelector(selected = state.buyAmount, onSelect = { viewModel.setBuyAmount(it) })
@@ -613,6 +650,16 @@ private fun FleetTab(
                         expanded = questsExpanded,
                         onToggleExpanded = onToggleQuestsExpanded,
                         onClaim = { idx -> viewModel.claimQuestReward(idx) }
+                    )
+                }
+            }
+
+            // Fleet Missions button (visible only when feature is unlocked)
+            if (state.isMissionFeatureUnlocked) {
+                item {
+                    MissionBoardButton(
+                        completedCount = state.completedMissions.size,
+                        onClick = onMissions
                     )
                 }
             }
@@ -677,6 +724,91 @@ private fun BuyAmountSelector(selected: BuyAmount, onSelect: (BuyAmount) -> Unit
                 ),
                 modifier = Modifier.height(28.dp).padding(horizontal = 2.dp)
             )
+        }
+    }
+}
+
+@Composable
+private fun MissionBoardButton(completedCount: Int, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 4.dp)
+            .clickable { onClick() },
+        colors = CardDefaults.cardColors(containerColor = CardBackground),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = "🚀 Missions",
+                color = StarBlue,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold
+            )
+            if (completedCount > 0) {
+                Spacer(Modifier.width(8.dp))
+                Box(
+                    modifier = Modifier
+                        .size(20.dp)
+                        .clip(CircleShape)
+                        .background(AlertRed),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "$completedCount",
+                        color = Color.White,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MissionTutorialDialog(onDismiss: () -> Unit) {
+    Dialog(onDismissRequest = {}) {
+        StarFleetIdleTheme {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = CardBackground),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text("🚀", fontSize = 40.sp)
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        "Fleet Missions",
+                        color = CreditGold,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    Text(
+                        "Send your ships on timed missions to earn credits, gems, and research points! Choose ships with high affinity for the mission type to increase your success chance.",
+                        color = TextPrimary,
+                        fontSize = 13.sp,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(Modifier.height(20.dp))
+                    Button(
+                        onClick = onDismiss,
+                        colors = ButtonDefaults.buttonColors(containerColor = NebulaPurple),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Got it!")
+                    }
+                }
+            }
         }
     }
 }

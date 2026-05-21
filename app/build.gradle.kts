@@ -49,6 +49,12 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+
+    testOptions {
+        unitTests.all {
+            it.useJUnitPlatform()
+        }
+    }
 }
 
 dependencies {
@@ -65,4 +71,9 @@ dependencies {
     implementation("com.google.android.gms:play-services-ads:23.6.0")
     implementation("com.google.android.ump:user-messaging-platform:3.0.0")
     debugImplementation("androidx.compose.ui:ui-tooling")
+
+    // Testing
+    testImplementation("io.kotest:kotest-property:5.8.0")
+    testImplementation("io.kotest:kotest-runner-junit5:5.8.0")
+    testImplementation("org.json:json:20231013")
 }
