@@ -18,7 +18,11 @@ import com.starfleet.idle.ui.theme.*
 @Composable
 fun StatsBar(state: GameState, onGetGems: () -> Unit = {}) {
     Column(
-        modifier = Modifier.fillMaxWidth().background(DeepSpace).padding(horizontal = 16.dp, vertical = 10.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(DeepSpace)
+            .statusBarsPadding()
+            .padding(horizontal = 16.dp, vertical = 10.dp)
     ) {
         Text("⭐ STARFLEET COMMAND", color = CreditGold, fontSize = 18.sp, fontWeight = FontWeight.Bold,
             modifier = Modifier.align(Alignment.CenterHorizontally))
