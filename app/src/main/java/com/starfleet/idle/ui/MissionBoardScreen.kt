@@ -50,6 +50,7 @@ fun MissionBoardScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(SpaceBlack)
+            .statusBarsPadding()
     ) {
         // Header
         MissionBoardHeader(
