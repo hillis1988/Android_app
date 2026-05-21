@@ -11,10 +11,10 @@ enum class MissionDifficulty(
     val researchPointReward: IntRange,
     val hasBonusRewardChance: Boolean
 ) {
-    EASY(listOf(30 * 60 * 1000L, 60 * 60 * 1000L), 0.3, 1, 0..0, false),
-    MEDIUM(listOf(60 * 60 * 1000L, 2 * 60 * 60 * 1000L), 0.5, 2, 0..0, false),
-    HARD(listOf(2 * 60 * 60 * 1000L, 4 * 60 * 60 * 1000L), 0.65, 3, 1..3, false),
-    ELITE(listOf(4 * 60 * 60 * 1000L, 8 * 60 * 60 * 1000L), 0.8, 5, 2..3, true)
+    EASY(listOf(30 * 60 * 1000L, 60 * 60 * 1000L), 0.3, 10, 0..0, false),
+    MEDIUM(listOf(60 * 60 * 1000L, 2 * 60 * 60 * 1000L), 0.5, 20, 0..0, false),
+    HARD(listOf(2 * 60 * 60 * 1000L, 4 * 60 * 60 * 1000L), 0.65, 30, 1..3, false),
+    ELITE(listOf(4 * 60 * 60 * 1000L, 8 * 60 * 60 * 1000L), 0.8, 50, 2..3, true)
 }
 
 // --- Mission Status ---
